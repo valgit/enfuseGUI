@@ -1,0 +1,63 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            ACTIONS = {
+                about = id; 
+                addImage = id; 
+                cancel = id; 
+                chooseOutputDirectory = id; 
+                enfuse = id; 
+                openPreferences = id; 
+                quit = id; 
+                reset = id; 
+                takeContrast = id; 
+                takeExposure = id; 
+                takeMu = id; 
+                takeSaturation = id; 
+                takeSigma = id; 
+            }; 
+            CLASS = enfuseController; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mAppendTo = NSTextField; 
+                mCancelButton = NSButton; 
+                mContrastSlider = NSSlider; 
+                mContrastStepper = NSStepper; 
+                mContrastTextField = NSTextField; 
+                mContrastWindowSizeTextField = NSTextField; 
+                mCopyAperture = NSButton; 
+                mCopyFocal = NSButton; 
+                mCopyMeta = NSButton; 
+                mCopyShutter = NSButton; 
+                mDoAfter = NSMatrix; 
+                mEnfuseButton = NSButton; 
+                mExposureSlider = NSSlider; 
+                mExposureStepper = NSStepper; 
+                mExposureTextField = NSTextField; 
+                mImageArrayCtrl = NSArrayController; 
+                mMinCurvatureTextField = NSTextField; 
+                mMuSlider = NSSlider; 
+                mMuStepper = NSStepper; 
+                mMuTextField = NSTextField; 
+                mOuputFile = NSTextField; 
+                mOutFile = NSTextField; 
+                mOutFormat = NSPopUpButton; 
+                mOutQuality = NSTextField; 
+                mOutputQualitySlider = NSSlider; 
+                mOutputType = NSMatrix; 
+                mResetButton = NSButton; 
+                mSaturationSlider = NSSlider; 
+                mSaturationStepper = NSStepper; 
+                mSaturationTextField = NSTextField; 
+                mSigmaSlider = NSSlider; 
+                mSigmaStepper = NSStepper; 
+                mSigmaTextField = NSTextField; 
+                mTableImage = NSTableView; 
+                window = NSWindow; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }
+    ); 
+    IBVersion = 1; 
+}
