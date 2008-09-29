@@ -58,6 +58,7 @@
     TaskWrapper *enfuseTask;
 
     NSString* _outputfile;
+    NSString* _tmpfile;
 
     NSMutableArray *images;
 }
@@ -80,6 +81,8 @@
 
 -(NSString*)outputfile;
 -(void)setOutputfile:(NSString *)file;
+-(NSString*)tempfile;
+-(void)setTempfile:(NSString *)file;
 
 - (IBAction)openPreferences:(id)sender;
 

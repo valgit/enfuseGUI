@@ -36,6 +36,7 @@
 	if([[NSFileManager defaultManager] isExecutableFileAtPath:path]==NO){
 		NSString *alert = [path stringByAppendingString: @" is not executable!"];
 		NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+		[NSApp terminate:nil];
 #if 0
         [NSException raise:NSGenericException
 					format:@"bad_find_binary:_%@", path];
@@ -116,6 +117,24 @@
 			// do nothing
 			break;
     }
+}
+
+// return a somewhat globally unique filename ...
+// 
+-(NSString*)tempfilename:(NSString *)format;
+{
+      NSString *tempFilename = NSTemporaryDirectory();
+      NSString *tempString = [[NSProcessInfo processInfo] globallyUniqueString];
+      tempFilename = [tempFilename stringByAppendingPathComponent:tempString];
+      return [[NSString stringWithFormat:@"%@.%@",tempFilename,format] retain];
+}
+
+-(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
+{
+	NSImage        *source =[[NSImage alloc] initWithContentsOfFile:sourcePath];
+
+        NSBitmapImageRep *rep =[source bestRepresentationForDevice:nil];
+	NSMutableDictionary *exifDict =  [rep valueForProperty:@"NSImageEXIFData"];
 }
 
 #pragma mark -
@@ -303,9 +322,10 @@
 				   NSLog(@"bad selected tag is %d",[[mOutputType selectedCell] tag]);
 		   }
 		   
-		   NSLog(outputfile);
 		   [self setOutputfile:outputfile];
-		   
+		   [self setTempfile:[self tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
+		   NSLog(@"files are : (%@) %@,%@",outputfile,[self outputfile],[self tempfile]);
+
 #ifndef GNUSTEP
 		   NSString *path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] bundlePath],
 			   @"/enfuse/enfuse"];
@@ -327,7 +347,7 @@
 		   }
 		   
 		   [args addObject:@"-o"];
-		   [args addObject:outputfile];
+		   [args addObject:[self tempfile]];
 		   
 		   //[args addObject:@"-restore"];
 #if 0
@@ -521,8 +541,15 @@
     [mEnfuseButton setEnabled:YES];
 	
     if([mCopyMeta state]==NSOnState)  {
-		NSLog(@"%s : copying Exif",__PRETTY_FUNCTION__);
-		
+	[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
+    } else {
+	NSFileManager *fm = [NSFileManager defaultManager];
+   	if ([fm fileExistsAtPath:([self tempfile])]){
+	       BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:nil];
+	} else {
+		NSString *alert = [[self tempfile] stringByAppendingString: @" do not exist!\nCan't rename"];
+                NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+	}
     }
 	
     [self openFile:[self outputfile]];
@@ -738,6 +765,19 @@ NSArray *directoriesToAdd(NSString *path, NSString *existing)
 	if (_outputfile != file) {
 		[_outputfile release];
         _outputfile = [file copy];
+	}
+}
+
+-(NSString*)tempfile;
+{
+	return _tmpfile;
+}
+
+-(void)setTempfile:(NSString *)file;
+{
+	if (_tmpfile != file) {
+		[_tmpfile release];
+        _tmpfile = [file copy];
 	}
 }
 
