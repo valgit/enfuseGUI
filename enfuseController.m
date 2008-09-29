@@ -1,3 +1,8 @@
+
+/* we need imageio */
+#ifndef GNUSTEP
+#import <ApplicationServices/ApplicationServices.h>
+#endif
 #import "enfuseController.h"
 
 #include <math.h>
@@ -54,8 +59,8 @@
 	// theIconColumn = [table tableColumnWithIdentifier:@"icon"];
 	// [ic setImageScaling:NSScaleProportionally]; // or NSScaleToFit
 	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	NSLog(@"ICC aware ? %d",[defaults boolForKey:@"useCIECAM02"]); // ICC profile
+	//NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	//NSLog(@"ICC aware ? %d",[defaults boolForKey:@"useCIECAM02"]); // ICC profile
 																   // int cachesize = [defaults intForKey:@"cachesize"]; // def 1024
 																   // int blocksize = [defaults intForKey:@"blocksize"]; // def 2048
 }
@@ -131,10 +136,67 @@
 
 -(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
 {
-	NSImage        *source =[[NSImage alloc] initWithContentsOfFile:sourcePath];
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+#ifndef GNUSTEP
+	
+	// create the source 
+	NSURL *_url = [NSURL fileURLWithPath:sourcePath]; // for exif
+	NSURL *_outurl = [NSURL fileURLWithPath:outputfile]; // dest
+	NSURL *_tmpurl = [NSURL fileURLWithPath:tempfile]; // for image
+	CGImageSourceRef exifsrc = CGImageSourceCreateWithURL((CFURLRef)_url, NULL);
+	CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)_tmpurl, NULL);
+	if(source != nil) {
+		// get Exif from source?
+		NSDictionary *properties = (NSDictionary *) CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
+		NSLog(@"props: %@", [properties description]);
+		NSDictionary *exif = [properties objectForKey:kCGImagePropertyExifDictionary];
+		if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
+			NSLog(@"the exif data is: %@", [exif description]);
+		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
+		
+		// create the destination
+		CGImageDestinationRef destination = CGImageDestinationCreateWithURL(_outurl,
+				CGImageSourceGetType(source),
+				CGImageSourceGetCount(source),
+				NULL);
+	
+		CGImageDestinationSetProperties(destination, properties);	
+		CFRelease(properties);
 
-        NSBitmapImageRep *rep =[source bestRepresentationForDevice:nil];
-	NSMutableDictionary *exifDict =  [rep valueForProperty:@"NSImageEXIFData"];
+		// copy data from temporary image ...
+		int imageCount = CGImageSourceGetCount(source);
+		int i;
+		for (i = 0; i < imageCount; i++) {
+			CGImageDestinationAddImageFromSource(destination,
+						     source,
+						     i,
+						     NULL);
+		}
+    
+		CGImageDestinationFinalize(destination);
+    
+		CFRelease(destination);
+		CFRelease(source); 
+		CFRelease(exifsrc); 
+	} else {
+		NSRunInformationalAlertPanel(@"Copying Exif error!",
+									 @"Unable to add Exif to Image.",
+									 @"OK",
+									 nil,
+									 nil,
+									 nil);
+	}
+#else
+	NSFileManager *fm = [NSFileManager defaultManager];
+        if ([fm fileExistsAtPath:(tempfile)]){
+              BOOL result = [fm movePath:tempfile toPath:outputfile handler:nil];
+        } else {
+              NSString *alert = [tempfile stringByAppendingString: @" do not exist!\nCan't rename"];
+              NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+        }
+#endif
+	[pool release];
 }
 
 #pragma mark -
@@ -149,7 +211,7 @@
 // KVC compliant for array
 - (unsigned)countOfImages
 {
-	NSLog(@"%s icount: %d",__PRETTY_FUNCTION__,[images count]);
+	//NSLog(@"%s icount: %d",__PRETTY_FUNCTION__,[images count]);
 	
 	return [images count];
 }
@@ -541,15 +603,15 @@
     [mEnfuseButton setEnabled:YES];
 	
     if([mCopyMeta state]==NSOnState)  {
-	[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
+		[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
     } else {
-	NSFileManager *fm = [NSFileManager defaultManager];
-   	if ([fm fileExistsAtPath:([self tempfile])]){
-	       BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:nil];
-	} else {
-		NSString *alert = [[self tempfile] stringByAppendingString: @" do not exist!\nCan't rename"];
-                NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
-	}
+		NSFileManager *fm = [NSFileManager defaultManager];
+		if ([fm fileExistsAtPath:([self tempfile])]){
+			BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:nil];
+		} else {
+			NSString *alert = [[self tempfile] stringByAppendingString: @" do not exist!\nCan't rename"];
+			NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+		}
     }
 	
     [self openFile:[self outputfile]];

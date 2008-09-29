@@ -1,0 +1,64 @@
+			CGImageSourceRef cgImage;
+			NSDictionary *metaDataDict;
+			cgImage = CGImageSourceCreateWithURL((CFURLRef)[NSURL fileURLWithPath:filePath], NULL);
+			metaDataDict = (NSDictionary *)CGImageSourceCopyPropertiesAtIndex(cgImage, 0, NULL);
+			if (metaDataDict) {
+				[self setExifInfoString:[self createExifInfoStringFromMetaData:metaDataDict]];
+			}
+		}
+
+
+- (NSString *)createExifInfoStringFromMetaData:(NSDictionary *)dict
+{
+	NSMutableArray *array = [NSMutableArray arrayWithCapacity:6];
+	NSDictionary *exifDict, *tiffDict;
+
+	exifDict = [dict objectForKey:(NSString *)kCGImagePropertyExifDictionary];
+	tiffDict = [dict objectForKey:(NSString *)kCGImagePropertyTIFFDictionary];
+	
+	if (exifDict && [exifDict count] > 0) {
+		NSString *focalLengthStr, *fNumberStr, *exposureTimeStr, *isoSpeedStr, *focalLen35mmStr;
+
+		NSNumber *focalLengthObj = [exifDict objectForKey:(NSString *)kCGImagePropertyExifFocalLength];
+		if (focalLengthObj) {
+			focalLengthStr = [NSString stringWithFormat:@"%@mm", [focalLengthObj stringValue]];
+			[array addObject:focalLengthStr];
+		}
+/*
+		NSNumber *focalLen35mmObj = [exifDict objectForKey:(NSString *)kCGImagePropertyExifFocalLenIn35mmFilm];
+		if (focalLen35mmObj) {
+			focalLen35mmStr = [NSString stringWithFormat:@"(%@mm in 35mm)", [focalLen35mmObj stringValue]];
+			[array addObject:focalLen35mmStr];
+		}
+*/
+		NSNumber *fNumberObj = [exifDict objectForKey:(NSString *)kCGImagePropertyExifFNumber];
+		if (fNumberObj) {
+			fNumberStr = [NSString stringWithFormat:@"F%@", [fNumberObj stringValue]];
+			[array addObject:fNumberStr];
+		}
+
+		NSNumber *exposureTimeObj = (NSNumber *)[exifDict objectForKey:(NSString *)kCGImagePropertyExifExposureTime];
+		if (exposureTimeObj) {
+			exposureTimeStr = [NSString stringWithFormat:@"1/%.0f", (1/[exposureTimeObj floatValue])];
+			[array addObject:exposureTimeStr];
+		}
+		
+		NSArray *isoSpeedObj = [exifDict objectForKey:(NSString *)kCGImagePropertyExifISOSpeedRatings];
+		if (isoSpeedObj && [isoSpeedObj count] > 0) {
+			isoSpeedStr = [NSString stringWithFormat: @"IS0%@", [[isoSpeedObj objectAtIndex:0] stringValue]];
+			[array addObject:isoSpeedStr];
+		}
+	}
+	
+	if (tiffDict && [tiffDict count] > 0) {
+		NSString *cameraNameStr, *cameraMakerStr;
+		cameraNameStr = [tiffDict objectForKey:(NSString *)kCGImagePropertyTIFFModel];
+		if (cameraNameStr) [array addObject:[NSString stringWithFormat:@"\n%@", cameraNameStr]];
+		
+		cameraMakerStr = [tiffDict objectForKey:(NSString *)kCGImagePropertyTIFFMake];
+		if (cameraMakerStr) [array addObject:cameraMakerStr];
+	}
+	
+	return ([array count] > 0) ? [array componentsJoinedByString:@", "] : nil;
+}
+
