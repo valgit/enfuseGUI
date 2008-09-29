@@ -62,3 +62,33 @@
 	return ([array count] > 0) ? [array componentsJoinedByString:@", "] : nil;
 }
 
+
+===============================================================
+// ? thumbnail  (look at : http://developer.apple.com/samplecode/ApertureResizer/listing4.html )
+ NSDictionary* thumbOpts = [NSDictionary dictionaryWithObjectsAndKeys:
+                        (id)kCFBooleanTrue, (id) kCGImageSourceCreateThumbnailWithTransform,
+                        (id)kCFBooleanTrue, (id) kCGImageSourceCreateThumbnailFromImageIfAbsent, nil];
+
+         size_t count = CGImageSourceGetCount(source);            
+         integer_t i = 0;
+         
+         if ((count == 0))
+         {
+             CGImageRef image = CGImageSourceCreateThumbnailAtIndex(source, 
+			 0, (CFDictionaryRef)thumbOpts);
+
+             outpath = [[[NSString alloc] initWithFormat:@"%s.jpg",argv[2]] stringByExpandingTildeInPath];
+             NSURL * outurl = [NSURL fileURLWithPath: outpath];
+             CGImageDestinationRef ref = CGImageDestinationCreateWithURL ((CFURLRef)outurl, 
+			(CFStringRef)@"public.jpeg", 1, NULL);
+             
+             // add image to the ImageIO destination (specify the image we want to save)
+             CGImageDestinationAddImage(ref, image, NULL);
+
+             if (!CGImageDestinationFinalize(ref)) {
+                 NSLog([[NSString alloc] initWithString:@"Error writing JPEG file \n"]);
+             }
+
+               CFRelease(ref);
+             CGImageRelease(image);
+
