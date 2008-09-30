@@ -1,7 +1,7 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
 APP_NAME = enfuseGUI
-enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m
+enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m 
 
 #NSBezierPath+Additions.m
 #enfuseGUI_OBJC_LIBS = -lexiv2

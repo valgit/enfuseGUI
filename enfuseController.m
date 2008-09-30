@@ -237,8 +237,27 @@
     archiver = [[NSKeyedUnarchiver alloc]
                    initForReadingWithData: data];
 
-    //stitches = [archiver decodeObjectForKey: @"stitches"];
+    double fvalue = [archiver decodeDoubleForKey: @"contrast"];
+    [mContrastSlider setFloatValue:fvalue];
+    [self takeContrast:mContrastSlider];
+    fvalue = [archiver decodeDoubleForKey: @"exposure"];
+    [mExposureSlider setFloatValue:fvalue];
+    [self takeExposure:mExposureSlider];
+    fvalue = [archiver decodeDoubleForKey: @"saturation"];
+    [mSaturationSlider setFloatValue:fvalue];
+    [self takeSaturation:mSaturationSlider];
 
+    fvalue = [archiver decodeDoubleForKey: @"mu"];
+    [mMuSlider setFloatValue:fvalue];
+    [self takeMu:mMuSlider];
+    fvalue = [archiver decodeDoubleForKey: @"sigma"];
+    [mSigmaSlider setFloatValue:fvalue];
+    [self takeSigma:mSigmaSlider];
+
+    fvalue = [archiver decodeDoubleForKey: @"windowsize"];
+    [mContrastWindowSizeTextField setFloatValue:fvalue];
+    fvalue = [archiver decodeDoubleForKey: @"mincurvature"];
+    [mMinCurvatureTextField setFloatValue:fvalue];
     return (YES);
 
 } 
@@ -613,13 +632,31 @@
 - (IBAction) openPresets: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+	NSOpenPanel *open = [NSOpenPanel openPanel];
+	[open setTitle:@"Load Presets"];
+	[open setAllowsMultipleSelection:NO];
+	if([open runModalForTypes:[NSArray arrayWithObject:@"enf"]] == NSOKButton){
+		NSString *file = [[open filenames] objectAtIndex:0];
+
+		NSData *data = [NSData dataWithContentsOfFile:file];
+		[self readFromData:data ofType:@"xml"];
+		[data release];
+	}
 }
 
 - (IBAction) savePresets: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
-	NSData* data = [self dataOfType:@"xml"];
-	[data writeToFile:@"/tmp/test.xml" atomically:YES ];
+	NSSavePanel *save = [NSSavePanel savePanel];
+	[save setTitle:@"Save Presets"];
+	[save setRequiredFileType:@"enf"];
+	if([save runModal] == NSOKButton){
+		NSString *file = [save filename];
+
+		NSData* data = [self dataOfType:@"xml"];
+		[data writeToFile:file atomically:YES ];
+		[data release];
+	}
 }
 
 #pragma mark -
