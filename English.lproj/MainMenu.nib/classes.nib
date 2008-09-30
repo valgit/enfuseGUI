@@ -9,8 +9,10 @@
                 chooseOutputDirectory = id; 
                 enfuse = id; 
                 openPreferences = id; 
+                openPresets = id; 
                 quit = id; 
                 reset = id; 
+                savePresets = id; 
                 takeContrast = id; 
                 takeExposure = id; 
                 takeMu = id; 
@@ -46,6 +48,7 @@
                 mOutQuality = NSTextField; 
                 mOutputQualitySlider = NSSlider; 
                 mOutputType = NSMatrix; 
+                mProgessIndicator = NSProgressIndicator; 
                 mResetButton = NSButton; 
                 mSaturationSlider = NSSlider; 
                 mSaturationStepper = NSStepper; 

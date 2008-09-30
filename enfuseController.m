@@ -63,6 +63,9 @@
 	//NSLog(@"ICC aware ? %d",[defaults boolForKey:@"useCIECAM02"]); // ICC profile
 																   // int cachesize = [defaults intForKey:@"cachesize"]; // def 1024
 																   // int blocksize = [defaults intForKey:@"blocksize"]; // def 2048
+#ifndef GNUSTEP
+	myBadge = [[CTProgressBadge alloc] init];
+#endif
 }
 
 - (id)init
@@ -148,21 +151,21 @@
 	CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)_tmpurl, NULL);
 	if(source != nil) {
 		// get Exif from source?
-		NSDictionary *properties = (NSDictionary *) CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
-		NSLog(@"props: %@", [properties description]);
-		NSDictionary *exif = [properties objectForKey:kCGImagePropertyExifDictionary];
-		if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
-			NSLog(@"the exif data is: %@", [exif description]);
-		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
+		CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
+		NSLog(@"props: %@", [(NSDictionary *)properties description]);
+		//NSDictionary *exif = [properties objectForKey:kCGImagePropertyExifDictionary];
+		//if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
+		//	NSLog(@"the exif data is: %@", [exif description]);
+		//} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
 		
 		// create the destination
-		CGImageDestinationRef destination = CGImageDestinationCreateWithURL(_outurl,
+		CGImageDestinationRef destination = CGImageDestinationCreateWithURL((CFURLRef)_outurl,
 				CGImageSourceGetType(source),
 				CGImageSourceGetCount(source),
 				NULL);
 	
 		CGImageDestinationSetProperties(destination, properties);	
-		CFRelease(properties);
+		
 
 		// copy data from temporary image ...
 		int imageCount = CGImageSourceGetCount(source);
@@ -178,6 +181,7 @@
     
 		CFRelease(destination);
 		CFRelease(source); 
+		CFRelease(properties);
 		CFRelease(exifsrc); 
 	} else {
 		NSRunInformationalAlertPanel(@"Copying Exif error!",
@@ -198,6 +202,55 @@
 #endif
 	[pool release];
 }
+
+// saving ?
+- (NSData *) dataOfType: (NSString *) typeName
+{
+
+    NSMutableData *data = [[NSMutableData alloc] init];
+
+    NSKeyedArchiver *archiver;
+    archiver = [[NSKeyedArchiver alloc]
+                   initForWritingWithMutableData: data];
+    [archiver setOutputFormat: NSPropertyListXMLFormat_v1_0];
+
+    [archiver encodeDouble: [mContrastSlider doubleValue]  forKey: @"contrast"];
+    [archiver encodeDouble: [mExposureSlider doubleValue]  forKey: @"exposure"];
+    [archiver encodeDouble: [mSaturationSlider doubleValue]  forKey: @"saturation"];
+
+    [archiver encodeDouble: [mMuSlider doubleValue]  forKey: @"mu"];
+    [archiver encodeDouble: [mSigmaSlider doubleValue]  forKey: @"sigma"];
+
+    [archiver encodeDouble: [mContrastWindowSizeTextField doubleValue]  forKey: @"windowsize"];
+    [archiver encodeDouble: [mMinCurvatureTextField doubleValue]  forKey: @"mincurvature"];
+
+    [archiver finishEncoding];
+
+    return ([data autorelease]);
+
+} 
+
+- (BOOL) readFromData: (NSData *) data
+              ofType: (NSString *) typeName
+{
+    NSKeyedUnarchiver *archiver;
+    archiver = [[NSKeyedUnarchiver alloc]
+                   initForReadingWithData: data];
+
+    //stitches = [archiver decodeObjectForKey: @"stitches"];
+
+    return (YES);
+
+} 
+
+#if 0
+// for testing !
+- (void) applicationWillTerminate: (NSNotification *)note 
+{ 
+	NSData* data = [self dataOfType:@"xml"];
+	[data writeToFile:@"/tmp/test.xml" atomically:YES ];
+} 
+#endif
 
 #pragma mark -
 #pragma mark table binding 
@@ -465,8 +518,11 @@
 	[mSaturationSlider setFloatValue:0.2]; // (0 <= WEIGHT <= 1).  Default: 0.2
 	[self takeSaturation:mSaturationSlider];
 	
-	// mu (0 <= MEAN <= 1).  Default: 0.5
-	// sigma (SIGMA > 0).  Default: 0.2
+	[mMuSlider setFloatValue:0.5]; // mu (0 <= MEAN <= 1).  Default: 0.5
+	[self takeMu:mMuSlider];
+	
+	[mSigmaSlider setFloatValue:0.2]; // sigma (SIGMA > 0).  Default: 0.2
+	[self takeSigma:mSigmaSlider];
 }
 
 - (IBAction) about: (IBOutlet)sender;
@@ -554,6 +610,17 @@
 	[mMuSlider setFloatValue:theValue];
 }
 
+- (IBAction) openPresets: (IBOutlet)sender;
+{
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+}
+
+- (IBAction) savePresets: (IBOutlet)sender;
+{
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	NSData* data = [self dataOfType:@"xml"];
+	[data writeToFile:@"/tmp/test.xml" atomically:YES ];
+}
 
 #pragma mark -
 #pragma mark TaskWrapper
@@ -564,8 +631,12 @@
 {
     // add the string (a chunk of the results from locate) to the NSTextView's
     // backing store, in the form of an attributed string
-    NSLog(@"output is : [%@]",output);
+    NSLog(@"%d output is : [%@]",value, output);
 	// TODO        [mProgress incrementBy:1.0];
+#ifndef GNUSTEP
+	[myBadge badgeApplicationDockIconWithProgress:value/360 insetX:2 y:3];
+#endif
+	value+=1;
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
     // setup a selector to be called the next time through the event loop to scroll
@@ -587,6 +658,7 @@
     //[mRestoreButton setTitle:@"Stop"];
     [mEnfuseButton setEnabled:NO];
 	// TODO  [mProgress startAnimation:self];
+	value = 0;
 }
 
 // A callback that gets called when a TaskWrapper is completed, allowing us to do any cleanup

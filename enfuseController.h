@@ -1,6 +1,7 @@
 /* enfuseController */
 
 #import <Cocoa/Cocoa.h>
+#import "CTProgressBadge.h"
 #import "TaskWrapper.h"
 #import "MyPrefsWindowController.h"
 
@@ -53,6 +54,7 @@
   IBOutlet NSButton* mCopyShutter;
   IBOutlet NSButton* mCopyFocal;
 
+  CTProgressBadge *myBadge;
   @private
     BOOL findRunning;
     TaskWrapper *enfuseTask;
@@ -61,6 +63,8 @@
     NSString* _tmpfile;
 
     NSMutableArray *images;
+	
+	int value;
 }
 
 - (IBAction) cancel: (IBOutlet)sender;
@@ -85,5 +89,8 @@
 -(void)setTempfile:(NSString *)file;
 
 - (IBAction)openPreferences:(id)sender;
+
+- (IBAction) openPresets: (IBOutlet)sender;
+- (IBAction) savePresets: (IBOutlet)sender;
 
 @end
