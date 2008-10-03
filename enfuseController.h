@@ -55,6 +55,9 @@
   IBOutlet NSButton* mCopyFocal;
 
   CTProgressBadge *myBadge;
+
+  IBOutlet NSProgressIndicator *mProgress;
+
   @private
     BOOL findRunning;
     TaskWrapper *enfuseTask;

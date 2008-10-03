@@ -63,9 +63,7 @@
 	//NSLog(@"ICC aware ? %d",[defaults boolForKey:@"useCIECAM02"]); // ICC profile
 																   // int cachesize = [defaults intForKey:@"cachesize"]; // def 1024
 																   // int blocksize = [defaults intForKey:@"blocksize"]; // def 2048
-#ifndef GNUSTEP
 	myBadge = [[CTProgressBadge alloc] init];
-#endif
 }
 
 - (id)init
@@ -152,11 +150,11 @@
 	if(source != nil) {
 		// get Exif from source?
 		CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
-		NSLog(@"props: %@", [(NSDictionary *)properties description]);
-		//NSDictionary *exif = [properties objectForKey:kCGImagePropertyExifDictionary];
-		//if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
-		//	NSLog(@"the exif data is: %@", [exif description]);
-		//} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
+		//NSLog(@"props: %@", [(NSDictionary *)properties description]);
+		NSDictionary *exif = (NSDictionary *)[properties objectForKey:kCGImagePropertyExifDictionary];
+		if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
+			NSLog(@"the exif data is: %@", [exif description]);
+		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
 		
 		// create the destination
 		CGImageDestinationRef destination = CGImageDestinationCreateWithURL((CFURLRef)_outurl,
@@ -164,7 +162,7 @@
 				CGImageSourceGetCount(source),
 				NULL);
 	
-		CGImageDestinationSetProperties(destination, properties);	
+		CGImageDestinationSetProperties(destination, exif);	
 		
 
 		// copy data from temporary image ...
@@ -174,7 +172,7 @@
 			CGImageDestinationAddImageFromSource(destination,
 						     source,
 						     i,
-						     NULL);
+						     exif);
 		}
     
 		CGImageDestinationFinalize(destination);
@@ -237,27 +235,8 @@
     archiver = [[NSKeyedUnarchiver alloc]
                    initForReadingWithData: data];
 
-    double fvalue = [archiver decodeDoubleForKey: @"contrast"];
-    [mContrastSlider setFloatValue:fvalue];
-    [self takeContrast:mContrastSlider];
-    fvalue = [archiver decodeDoubleForKey: @"exposure"];
-    [mExposureSlider setFloatValue:fvalue];
-    [self takeExposure:mExposureSlider];
-    fvalue = [archiver decodeDoubleForKey: @"saturation"];
-    [mSaturationSlider setFloatValue:fvalue];
-    [self takeSaturation:mSaturationSlider];
+    //stitches = [archiver decodeObjectForKey: @"stitches"];
 
-    fvalue = [archiver decodeDoubleForKey: @"mu"];
-    [mMuSlider setFloatValue:fvalue];
-    [self takeMu:mMuSlider];
-    fvalue = [archiver decodeDoubleForKey: @"sigma"];
-    [mSigmaSlider setFloatValue:fvalue];
-    [self takeSigma:mSigmaSlider];
-
-    fvalue = [archiver decodeDoubleForKey: @"windowsize"];
-    [mContrastWindowSizeTextField setFloatValue:fvalue];
-    fvalue = [archiver decodeDoubleForKey: @"mincurvature"];
-    [mMinCurvatureTextField setFloatValue:fvalue];
     return (YES);
 
 } 
@@ -476,6 +455,7 @@
 		   
 		   //[args addObject:@"greycstoration"];
 		   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+		   //NSLog(@"icc : %@",[defaults boolForKey:@"useCIECAM02"]);
 		   if ([defaults boolForKey:@"useCIECAM02"]) { // ICC profile
 			   [args addObject:@"-c"];
 		   }
@@ -632,31 +612,13 @@
 - (IBAction) openPresets: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
-	NSOpenPanel *open = [NSOpenPanel openPanel];
-	[open setTitle:@"Load Presets"];
-	[open setAllowsMultipleSelection:NO];
-	if([open runModalForTypes:[NSArray arrayWithObject:@"enf"]] == NSOKButton){
-		NSString *file = [[open filenames] objectAtIndex:0];
-
-		NSData *data = [NSData dataWithContentsOfFile:file];
-		[self readFromData:data ofType:@"xml"];
-		[data release];
-	}
 }
 
 - (IBAction) savePresets: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
-	NSSavePanel *save = [NSSavePanel savePanel];
-	[save setTitle:@"Save Presets"];
-	[save setRequiredFileType:@"enf"];
-	if([save runModal] == NSOKButton){
-		NSString *file = [save filename];
-
-		NSData* data = [self dataOfType:@"xml"];
-		[data writeToFile:file atomically:YES ];
-		[data release];
-	}
+	NSData* data = [self dataOfType:@"xml"];
+	[data writeToFile:@"/tmp/test.xml" atomically:YES ];
 }
 
 #pragma mark -
@@ -670,10 +632,8 @@
     // backing store, in the form of an attributed string
     NSLog(@"%d output is : [%@]",value, output);
 	// TODO        [mProgress incrementBy:1.0];
-#ifndef GNUSTEP
 	[myBadge badgeApplicationDockIconWithProgress:value/360 insetX:2 y:3];
-#endif
-	value+=1;
+	value+=36;
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
     // setup a selector to be called the next time through the event loop to scroll
@@ -809,9 +769,52 @@
 		// create and configure a new Image
 		NSImage* image =[[NSImage alloc] initWithContentsOfFile:fileName];
 		// create a meaning full info ...
+#ifdef GNUSTEP
 		NSBitmapImageRep *rep =[image bestRepresentationForDevice:nil];
 		NSMutableDictionary *exifDict =  [rep valueForProperty:@"NSImageEXIFData"];
 		NSString *text;
+#endif
+		
+		  NSDictionary* options = [NSDictionary dictionaryWithObjectsAndKeys:
+            (id)kCFBooleanTrue, (id)kCGImageSourceShouldCache,
+            (id)kCFBooleanTrue, (id)kCGImageSourceShouldAllowFloat, NULL];
+		CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)[NSURL fileURLWithPath:fileName], NULL);
+		if(source != nil) {
+			// get Exif from source?
+			NSDictionary* properties =  (NSDictionary *)CGImageSourceCopyPropertiesAtIndex(source, 0, (CFDictionaryRef)options);
+			//NSLog(@"props: %@", [properties description]);
+			NSDictionary *exif = [properties objectForKey:(NSString *)kCGImagePropertyExifDictionary];
+			if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
+				NSString *focalLengthStr, *fNumberStr, *exposureTimeStr,exposureBiasStr;
+				NSLog(@"the exif data is: %@", [exif description]);
+				NSNumber *focalLengthObj = [exif objectForKey:(NSString *)kCGImagePropertyExifFocalLength];
+				if (focalLengthObj) {
+				   focalLengthStr = [NSString stringWithFormat:@"%@mm", [focalLengthObj stringValue]];
+				}
+				NSNumber *fNumberObj = [exif objectForKey:(NSString *)kCGImagePropertyExifFNumber];
+				if (fNumberObj) {
+                        	   fNumberStr = [NSString stringWithFormat:@"F%@", [fNumberObj stringValue]];
+				}
+				NSNumber *exposureTimeObj = (NSNumber *)[exif objectForKey:(NSString *)kCGImagePropertyExifExposureTime];
+				if (exposureTimeObj) {
+                        	   exposureTimeStr = [NSString stringWithFormat:@"1/%.0f", (1/[exposureTimeObj floatValue])];
+				}
+				NSNumber *exposureBiasObj = (NSNumber *)[exif objectForKey:@"ExposureBiasValue"];
+				if (exposureBiasObj) {
+                                   exposureBiasStr = [NSString stringWithFormat:@"Bias:%@", [exposureBiasObj stringValue]];
+                                }
+
+			text = [NSString stringWithFormat:@"%@\n%@ / %@ @ %@ bias : %@", [fileName lastPathComponent],
+				focalLengthStr,exposureTimeStr,fNumberStr,exposureBiasObj];
+			} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
+		CFRelease(source);
+		CFRelease(properties);
+		} else {
+			text = [fileName lastPathComponent];
+		}
+
+        
+#ifdef GNUSTEP
 		//NSLog(@"Exif Data in  %@", exifDict);
 		// TODO better with ImageIO
 		if (exifDict != nil) {
@@ -827,7 +830,7 @@
 		} else {
 			text = [fileName lastPathComponent];
 		}
-
+#endif
 		NSNumber *enable = [NSNumber numberWithBool: YES];
 		// [NSString stringWithFormat: 
 		NSMutableDictionary *newImage = [NSMutableDictionary dictionaryWithObjectsAndKeys:enable,@"enable",fileName,@"file",text,@"text",image,@"thumb",nil]; 
