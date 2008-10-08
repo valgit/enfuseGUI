@@ -2,10 +2,24 @@
 /* we need imageio */
 #ifndef GNUSTEP
 #import <ApplicationServices/ApplicationServices.h>
+#import "NSImage+GTImageConversion.h"
+#else
+#import "NSImage-ProportionalScaling.h"
 #endif
 #import "enfuseController.h"
 
+
 #include <math.h>
+
+// Categories : private methods
+@interface enfuseController (Private)
+#ifndef GNUSTEP
+- (NSImage*) createThumbnail:(CGImageSourceRef)imsource;
+#endif
+-(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
+-(NSString*)previewfilename:(NSString *)file;
+
+@end
 
 @implementation enfuseController
 
@@ -16,7 +30,7 @@
 {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSDictionary *appDefaults = [NSDictionary dictionaryWithObjectsAndKeys:
-		@"YES", @"useCIECAM02",
+		@"YES", @"useCIECAM",
 		@"default", @"cachesize",
 		@"default", @"blocksize",
 		nil];
@@ -60,10 +74,13 @@
 	// [ic setImageScaling:NSScaleProportionally]; // or NSScaleToFit
 	
 	//NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	//NSLog(@"ICC aware ? %d",[defaults boolForKey:@"useCIECAM02"]); // ICC profile
+	//NSLog(@"ICC aware ? %d",[defaults boolForKey:@"useCIECAM"]); // ICC profile
 																   // int cachesize = [defaults intForKey:@"cachesize"]; // def 1024
 																   // int blocksize = [defaults intForKey:@"blocksize"]; // def 2048
+#ifndef GNUSTEP
 	myBadge = [[CTProgressBadge alloc] init];
+#endif
+	[self reset:mResetButton];
 }
 
 - (id)init
@@ -78,6 +95,7 @@
 
 - (void)dealloc
 {
+	
 	[images release];
     [super dealloc];
 }
@@ -135,72 +153,6 @@
       return [[NSString stringWithFormat:@"%@.%@",tempFilename,format] retain];
 }
 
--(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
-{
-	NSLog(@"%s",__PRETTY_FUNCTION__);
-	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-#ifndef GNUSTEP
-	
-	// create the source 
-	NSURL *_url = [NSURL fileURLWithPath:sourcePath]; // for exif
-	NSURL *_outurl = [NSURL fileURLWithPath:outputfile]; // dest
-	NSURL *_tmpurl = [NSURL fileURLWithPath:tempfile]; // for image
-	CGImageSourceRef exifsrc = CGImageSourceCreateWithURL((CFURLRef)_url, NULL);
-	CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)_tmpurl, NULL);
-	if(source != nil) {
-		// get Exif from source?
-		CFDictionaryRef properties = CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
-		//NSLog(@"props: %@", [(NSDictionary *)properties description]);
-		NSDictionary *exif = (NSDictionary *)[properties objectForKey:kCGImagePropertyExifDictionary];
-		if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
-			NSLog(@"the exif data is: %@", [exif description]);
-		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
-		
-		// create the destination
-		CGImageDestinationRef destination = CGImageDestinationCreateWithURL((CFURLRef)_outurl,
-				CGImageSourceGetType(source),
-				CGImageSourceGetCount(source),
-				NULL);
-	
-		CGImageDestinationSetProperties(destination, exif);	
-		
-
-		// copy data from temporary image ...
-		int imageCount = CGImageSourceGetCount(source);
-		int i;
-		for (i = 0; i < imageCount; i++) {
-			CGImageDestinationAddImageFromSource(destination,
-						     source,
-						     i,
-						     exif);
-		}
-    
-		CGImageDestinationFinalize(destination);
-    
-		CFRelease(destination);
-		CFRelease(source); 
-		CFRelease(properties);
-		CFRelease(exifsrc); 
-	} else {
-		NSRunInformationalAlertPanel(@"Copying Exif error!",
-									 @"Unable to add Exif to Image.",
-									 @"OK",
-									 nil,
-									 nil,
-									 nil);
-	}
-#else
-	NSFileManager *fm = [NSFileManager defaultManager];
-        if ([fm fileExistsAtPath:(tempfile)]){
-              BOOL result = [fm movePath:tempfile toPath:outputfile handler:nil];
-        } else {
-              NSString *alert = [tempfile stringByAppendingString: @" do not exist!\nCan't rename"];
-              NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
-        }
-#endif
-	[pool release];
-}
-
 // saving ?
 - (NSData *) dataOfType: (NSString *) typeName
 {
@@ -241,14 +193,28 @@
 
 } 
 
-#if 0
-// for testing !
+- (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
+	NSLog(@"error: %@", errorInfo);
+	return YES;
+}
+
+
 - (void) applicationWillTerminate: (NSNotification *)note 
 { 
-	NSData* data = [self dataOfType:@"xml"];
-	[data writeToFile:@"/tmp/test.xml" atomically:YES ];
+	NSFileManager *defaultManager = [NSFileManager defaultManager];
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	//NSData* data = [self dataOfType:@"xml"];
+	//[data writeToFile:@"/tmp/test.xml" atomically:YES ];
+		NSDictionary* obj=nil;
+	NSEnumerator *enumerator = [images objectEnumerator];
+	
+	while ( nil != (obj = [enumerator nextObject]) ) {
+		//NSLog(@"removing : %@",[obj valueForKey:@"thumbfile"]);		
+		[defaultManager removeFileAtPath:[obj valueForKey:@"thumbfile"] handler:self];
+	}	
+	// [self saveSettings];
 } 
-#endif
+
 
 #pragma mark -
 #pragma mark table binding 
@@ -456,8 +422,9 @@
 		   //[args addObject:@"greycstoration"];
 		   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 		   //NSLog(@"icc : %@",[defaults boolForKey:@"useCIECAM02"]);
-		   if ([defaults boolForKey:@"useCIECAM02"]) { // ICC profile
-			   [args addObject:@"-c"];
+		   if ([defaults boolForKey:@"useCIECAM"]) { // ICC profile
+			   NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
+			   //[args addObject:@"-c"];
 		   }
 		   
 		   [args addObject:@"-o"];
@@ -632,8 +599,10 @@
     // backing store, in the form of an attributed string
     NSLog(@"%d output is : [%@]",value, output);
 	// TODO        [mProgress incrementBy:1.0];
+#ifndef GNUSTEP
 	[myBadge badgeApplicationDockIconWithProgress:value/360 insetX:2 y:3];
-	value+=36;
+	value+=1;
+#endif
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
     // setup a selector to be called the next time through the event loop to scroll
@@ -711,7 +680,7 @@
 - (int)numberOfRowsInTableView: (NSTableView *)aTable
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
-	// TODO return [images count];
+	//return [images count];
 	return 0;
 }
 
@@ -734,6 +703,7 @@
 			  /* [[images objectAtIndex:row] objectForKey:@"name"] */ @"TODO" );
 	}
 }
+
 
 // button action ...
 - (IBAction)addImage:(id)sender
@@ -766,55 +736,59 @@
 		NSString* fileName = [files objectAtIndex:i];
 		NSLog(fileName);
 		
-		// create and configure a new Image
-		NSImage* image =[[NSImage alloc] initWithContentsOfFile:fileName];
-		// create a meaning full info ...
+		NSImage* image;
+		NSString *text;
 #ifdef GNUSTEP
+		// create and configure a new Image
+		image =[[NSImage alloc] initWithContentsOfFile:fileName];
+		// create a meaning full info ...
+
 		NSBitmapImageRep *rep =[image bestRepresentationForDevice:nil];
 		NSMutableDictionary *exifDict =  [rep valueForProperty:@"NSImageEXIFData"];
-		NSString *text;
-#endif
+#else
 		
-		  NSDictionary* options = [NSDictionary dictionaryWithObjectsAndKeys:
-            (id)kCFBooleanTrue, (id)kCGImageSourceShouldCache,
-            (id)kCFBooleanTrue, (id)kCGImageSourceShouldAllowFloat, NULL];
 		CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)[NSURL fileURLWithPath:fileName], NULL);
 		if(source != nil) {
+			NSDictionary* options = [NSDictionary dictionaryWithObjectsAndKeys:
+				(id)kCFBooleanTrue, (id)kCGImageSourceShouldCache,
+				(id)kCFBooleanTrue, (id)kCGImageSourceShouldAllowFloat,
+				NULL];
+			
 			// get Exif from source?
 			NSDictionary* properties =  (NSDictionary *)CGImageSourceCopyPropertiesAtIndex(source, 0, (CFDictionaryRef)options);
 			//NSLog(@"props: %@", [properties description]);
 			NSDictionary *exif = [properties objectForKey:(NSString *)kCGImagePropertyExifDictionary];
 			if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
-				NSString *focalLengthStr, *fNumberStr, *exposureTimeStr,exposureBiasStr;
-				NSLog(@"the exif data is: %@", [exif description]);
+				NSString *focalLengthStr, *fNumberStr, *exposureTimeStr,*exposureBiasStr;
+				//NSLog(@"the exif data is: %@", [exif description]);
 				NSNumber *focalLengthObj = [exif objectForKey:(NSString *)kCGImagePropertyExifFocalLength];
 				if (focalLengthObj) {
-				   focalLengthStr = [NSString stringWithFormat:@"%@mm", [focalLengthObj stringValue]];
+					focalLengthStr = [NSString stringWithFormat:@"%@mm", [focalLengthObj stringValue]];
 				}
 				NSNumber *fNumberObj = [exif objectForKey:(NSString *)kCGImagePropertyExifFNumber];
 				if (fNumberObj) {
-                        	   fNumberStr = [NSString stringWithFormat:@"F%@", [fNumberObj stringValue]];
+					fNumberStr = [NSString stringWithFormat:@"F%@", [fNumberObj stringValue]];
 				}
 				NSNumber *exposureTimeObj = (NSNumber *)[exif objectForKey:(NSString *)kCGImagePropertyExifExposureTime];
 				if (exposureTimeObj) {
-                        	   exposureTimeStr = [NSString stringWithFormat:@"1/%.0f", (1/[exposureTimeObj floatValue])];
+					exposureTimeStr = [NSString stringWithFormat:@"1/%.0f", (1/[exposureTimeObj floatValue])];
 				}
-				NSNumber *exposureBiasObj = (NSNumber *)[exif objectForKey:@"ExposureBiasValue"];
+				NSNumber *exposureBiasObj = (NSNumber *)[exif objectForKey:(NSString *)kCGImagePropertyExifExposureBiasValue];
 				if (exposureBiasObj) {
-                                   exposureBiasStr = [NSString stringWithFormat:@"Bias:%@", [exposureBiasObj stringValue]];
-                                }
-
-			text = [NSString stringWithFormat:@"%@\n%@ / %@ @ %@ bias : %@", [fileName lastPathComponent],
-				focalLengthStr,exposureTimeStr,fNumberStr,exposureBiasObj];
+					exposureBiasStr = [NSString stringWithFormat:@"Bias:%@", [exposureBiasObj stringValue]];
+				}
+				
+				text = [NSString stringWithFormat:@"%@\n%@ / %@ @ %@ bias : %@", [fileName lastPathComponent],
+					focalLengthStr,exposureTimeStr,fNumberStr,exposureBiasObj];
 			} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
-		CFRelease(source);
-		CFRelease(properties);
+			image = [self createThumbnail:source];
+			CFRelease(source);
+			CFRelease(properties);
 		} else {
 			text = [fileName lastPathComponent];
-		}
-
-        
-#ifdef GNUSTEP
+		}        
+#endif
+#ifdef GNUSTEP		
 		//NSLog(@"Exif Data in  %@", exifDict);
 		// TODO better with ImageIO
 		if (exifDict != nil) {
@@ -831,9 +805,14 @@
 			text = [fileName lastPathComponent];
 		}
 #endif
+		
+		NSData *thumbData = [image  TIFFRepresentation];
+		NSString *thumbname = [self previewfilename:[fileName lastPathComponent]];
+		[thumbData writeToFile:thumbname atomically:YES];
+		
 		NSNumber *enable = [NSNumber numberWithBool: YES];
 		// [NSString stringWithFormat: 
-		NSMutableDictionary *newImage = [NSMutableDictionary dictionaryWithObjectsAndKeys:enable,@"enable",fileName,@"file",text,@"text",image,@"thumb",nil]; 
+		NSMutableDictionary *newImage = [NSMutableDictionary dictionaryWithObjectsAndKeys:enable,@"enable",fileName,@"file",text,@"text",image,@"thumb",thumbname,@"thumbfile",nil]; 
 		//[images addObject:newImage];
 		[mImageArrayCtrl addObject:newImage];
 		//[newImage release]; // memory bug ?
@@ -1004,5 +983,134 @@ sample at :
 http://caffeinatedcocoa.com/blog/?p=7
 
 #endif
+@end
+
+@implementation enfuseController (Private)
+
+// return a somewhat globally unique filename ...
+// 
+-(NSString*)previewfilename:(NSString *)file
+{
+      NSString *tempFilename = NSTemporaryDirectory();
+    
+      return [[NSString stringWithFormat:@"%@/thumb_%@",tempFilename,file] retain];
+}
+
+#ifndef GNUSTEP
+// create a thumbnail using imageio framework
+- (NSImage*) createThumbnail:(CGImageSourceRef)imsource
+{
+	CGImageRef _thumbnail = nil;
+	
+	if (imsource) {		
+		// Ask ImageIO to create a thumbnail from the file's image data, if it can't find a suitable existing thumbnail image in the file.  
+		// We could comment out the following line if only existing thumbnails were desired for some reason
+		//  (maybe to favor performance over being guaranteed a complete set of thumbnails).
+		NSDictionary* thumbOpts = [NSDictionary dictionaryWithObjectsAndKeys:
+			(id)kCFBooleanTrue, (id)kCGImageSourceCreateThumbnailWithTransform,
+			(id)kCFBooleanTrue, (id)kCGImageSourceCreateThumbnailFromImageIfAbsent, // kCGImageSourceCreateThumbnailFromImageAlways
+			[NSNumber numberWithInt:160], (id)kCGImageSourceThumbnailMaxPixelSize, 
+			nil];
+		
+		// make image thumbnail
+		_thumbnail = CGImageSourceCreateThumbnailAtIndex(imsource, 0, (CFDictionaryRef)thumbOpts);
+		//NSImage *image = [[NSImage alloc] initWithCGImage:_thumbnail];
+		NSImage *image = [NSImage gt_imageWithCGImage:_thumbnail];	
+		
+	
+	
+		CFRelease(_thumbnail);
+		return image;
+	}
+	return NULL;
+}
+#endif
+
+-(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
+{
+	NSMutableDictionary* newExif;
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+#ifndef GNUSTEP
+	
+	// create the source 
+	NSURL *_url = [NSURL fileURLWithPath:sourcePath]; // for exif
+	NSURL *_outurl = [NSURL fileURLWithPath:outputfile]; // dest
+	NSURL *_tmpurl = [NSURL fileURLWithPath:tempfile]; // for image
+	CGImageSourceRef exifsrc = CGImageSourceCreateWithURL((CFURLRef)_url, NULL);
+	CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)_tmpurl, NULL);
+	if(source != nil) {
+		// get Exif from source?
+		NSDictionary* properties = (NSDictionary *)CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
+		//NSLog(@"props: %@", [(NSDictionary *)properties description]);
+		NSDictionary *exif = (NSDictionary *)[properties objectForKey:(NSString *)kCGImagePropertyExifDictionary];
+		if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
+			//NSLog(@"the exif data is: %@", [exif description]);
+			newExif = [NSMutableDictionary dictionaryWithDictionary:exif];
+
+			if ([mCopyShutter state]==NSOnState) {
+				NSLog(@"%s removing shutter speed",__PRETTY_FUNCTION__);
+				[newExif removeObjectForKey:(NSString *)kCGImagePropertyExifExposureTime];
+			}
+			if ([mCopyAperture state]==NSOnState) {
+				NSLog(@"%s removing aperture",__PRETTY_FUNCTION__);
+				[newExif removeObjectForKey:(NSString *)kCGImagePropertyExifFNumber];
+			}
+			if ([mCopyFocal state]==NSOnState) {
+				NSLog(@"%s removing focal length",__PRETTY_FUNCTION__);
+				[newExif removeObjectForKey:(NSString *)kCGImagePropertyExifFocalLength];
+			}
+		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
+		
+		// create the destination
+		CGImageDestinationRef destination = CGImageDestinationCreateWithURL((CFURLRef)_outurl,
+				CGImageSourceGetType(source),
+				CGImageSourceGetCount(source),
+				NULL);
+	
+		//CGImageDestinationSetProperties(destination, (CFDictionaryRef)exif);	
+		
+
+		// copy data from temporary image ...
+		int imageCount = CGImageSourceGetCount(source);
+		int i;
+		for (i = 0; i < imageCount; i++) {
+				//NSLog(@"imgs  : %d",i);
+				CGImageDestinationAddImageFromSource(destination,
+						     source,
+						     i,
+						     (CFDictionaryRef)newExif);
+		}
+    
+		CGImageDestinationFinalize(destination);
+    
+		CFRelease(destination);
+		CFRelease(source); 
+		CFRelease(properties);
+		CFRelease(exifsrc); 
+	} else {
+		NSRunInformationalAlertPanel(@"Copying Exif error!",
+									 @"Unable to add Exif to Image.",
+									 @"OK",
+									 nil,
+									 nil,
+									 nil);
+	}
+	NSFileManager *fm = [NSFileManager defaultManager];
+    if ([fm fileExistsAtPath:(tempfile)]){
+		[fm removeFileAtPath:tempfile handler:self];
+	}
+#else
+	NSFileManager *fm = [NSFileManager defaultManager];
+        if ([fm fileExistsAtPath:(tempfile)]){
+              BOOL result = [fm movePath:tempfile toPath:outputfile handler:nil];
+        } else {
+              NSString *alert = [tempfile stringByAppendingString: @" do not exist!\nCan't rename"];
+              NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+        }
+#endif
+	[pool release];
+}
+
 
 @end

@@ -1,7 +1,7 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
 APP_NAME = enfuseGUI
-enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m 
+enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m NSImage-ProportionalScaling.m
 
 #NSBezierPath+Additions.m
 #enfuseGUI_OBJC_LIBS = -lexiv2
@@ -19,6 +19,7 @@ InfoPlist.strings
 enfuseGUI_RESOURCE_FILES = \
 Info.plist\
 Remove.tiff\
+image_broken.png\
 Add.tiff
 
 enfuseGUI_APPLICATION_ICON = GREYCstoration.png

@@ -54,7 +54,9 @@
   IBOutlet NSButton* mCopyShutter;
   IBOutlet NSButton* mCopyFocal;
 
+#ifndef GNUSTEP
   CTProgressBadge *myBadge;
+#endif
 
   IBOutlet NSProgressIndicator *mProgress;
 
