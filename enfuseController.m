@@ -477,7 +477,10 @@
 		
 		   enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
 		   // kick off the process asynchronously
-		   [enfuseTask startProcess];
+		   int status = [enfuseTask startProcess];
+		   if (status != 0) {
+			NSRunAlertPanel (NULL, @"running error", @"OK", NULL, NULL);
+		   }
 	   }
 	   
 	   
@@ -642,7 +645,7 @@
 // A callback that gets called when a TaskWrapper is completed, allowing us to do any cleanup
 // that is needed from the app side.  This method is implemented as a part of conforming
 // to the ProcessController protocol.
-- (void)processFinished
+- (void)processFinished:(int)status
 {
     [mProgressIndicator stopAnimation:self];
     [mProgressIndicator setDoubleValue:0];
@@ -651,7 +654,8 @@
     // change the button's title back for the next search
     //[mEnfuseButton setTitle:@"Enfuse"];
     [mEnfuseButton setEnabled:YES];
-	
+
+    if (status == 0) {	
     if([mCopyMeta state]==NSOnState)  {
 		[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
     } else {
@@ -665,6 +669,10 @@
     }
 	
     [self openFile:[self outputfile]];
+    } else {
+	NSLog(@"%s task error=%d",__PRETTY_FUNCTION__,status);
+	NSRunAlertPanel (NULL, @"running error", @"OK", NULL, NULL);
+    }
 }
 
 // If the user closes the search window, let's just quit
