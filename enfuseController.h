@@ -68,8 +68,12 @@
     NSString* _tmpfile;
 
     NSMutableArray *images;
+
+    NSMutableDictionnary *_imageCacheData;
 	
-	int value;
+#ifndef GNUSTEP
+    int value;
+#endif
 }
 
 - (IBAction) cancel: (IBOutlet)sender;

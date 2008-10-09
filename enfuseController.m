@@ -79,8 +79,8 @@
 																   // int blocksize = [defaults intForKey:@"blocksize"]; // def 2048
 #ifndef GNUSTEP
 	myBadge = [[CTProgressBadge alloc] init];
-#endif
 	[self reset:mResetButton];
+#endif
 }
 
 - (id)init
@@ -195,7 +195,16 @@
 
 - (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
 	NSLog(@"error: %@", errorInfo);
-	return YES;
+	int result;
+        result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
+                FILE_OPERATION_ERROR,PROCEED, STOP, NULL,
+                [errorInfo objectForKey:@"Error"],
+                [errorInfo objectForKey:@"Path"]);
+
+        if (result == NSAlertDefaultReturn)
+                return YES;
+        else
+                return NO;
 }
 
 
@@ -813,8 +822,14 @@
 		NSNumber *enable = [NSNumber numberWithBool: YES];
 		// [NSString stringWithFormat: 
 		NSMutableDictionary *newImage = [NSMutableDictionary dictionaryWithObjectsAndKeys:enable,@"enable",fileName,@"file",text,@"text",image,@"thumb",thumbname,@"thumbfile",nil]; 
-		//[images addObject:newImage];
+#ifdef GNUSTEP
+		[images addObject:newImage];
+		[mTableImage reloadData];
+        	//[mTableImage scrollRowToVisible:[mTableImage numberOfRows]-1];
+
+#else
 		[mImageArrayCtrl addObject:newImage];
+#endif
 		//[newImage release]; // memory bug ?
 		}
 		
