@@ -472,8 +472,8 @@
 		   [args addObject:[NSString stringWithFormat:@"--wMu=%@",[mMuSlider stringValue]]];
 		   [args addObject:[NSString stringWithFormat:@"--wSigma=%@",[mSigmaSlider stringValue]]];
 		   
-		   [mProgressIndicator setDoubleValue:0.0];
-		   [mProgressIndicator setMaxValue:(1+4*[images count])];
+		   [mProgessIndicator setDoubleValue:0.0];
+		   [mProgessIndicator setMaxValue:(2+4*[images count])];
 		
 		   enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
 		   // kick off the process asynchronously
@@ -612,12 +612,17 @@
 {
     // add the string (a chunk of the results from locate) to the NSTextView's
     // backing store, in the form of an attributed string
-    NSLog(@"%d output is : [%@]",value, output);
-	[mProgressIndicator incrementBy:1.0];
+    if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
+	[output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
+	[mProgessIndicator incrementBy:1.0];
+	value+=1;
+	//NSLog(@"%d output is : [%@]",value, output);
+    } /* else {
+	NSLog(@"%d output is : [%@]",value, output);
+    } */
 #ifndef GNUSTEP
 	[myBadge badgeApplicationDockIconWithProgress:((360*value)/(1+4*[images count])) insetX:2 y:3];
 #endif
-	value+=1;
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
     // setup a selector to be called the next time through the event loop to scroll
@@ -638,7 +643,7 @@
     // change the "Sleuth" button to say "Stop"
     //[mRestoreButton setTitle:@"Stop"];
     [mEnfuseButton setEnabled:NO];
-	[mProgressIndicator startAnimation:self];
+	[mProgessIndicator startAnimation:self];
 	value = 0;
 }
 
@@ -647,13 +652,15 @@
 // to the ProcessController protocol.
 - (void)processFinished:(int)status
 {
-    [mProgressIndicator stopAnimation:self];
-    [mProgressIndicator setDoubleValue:0];
+    [mProgessIndicator stopAnimation:self];
+    [mProgessIndicator setDoubleValue:0];
 	
     findRunning=NO;
     // change the button's title back for the next search
     //[mEnfuseButton setTitle:@"Enfuse"];
     [mEnfuseButton setEnabled:YES];
+
+    //NSLog(@"last output is : %d",value);
 
     if (status == 0) {	
     if([mCopyMeta state]==NSOnState)  {

@@ -58,7 +58,7 @@
   CTProgressBadge *myBadge;
 #endif
 
-  IBOutlet NSProgressIndicator *mProgressIndicator;
+  IBOutlet NSProgressIndicator *mProgessIndicator; // !!
 
   @private
     BOOL findRunning;
