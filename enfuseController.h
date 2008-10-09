@@ -58,7 +58,7 @@
   CTProgressBadge *myBadge;
 #endif
 
-  IBOutlet NSProgressIndicator *mProgress;
+  IBOutlet NSProgressIndicator *mProgressIndicator;
 
   @private
     BOOL findRunning;
@@ -69,11 +69,8 @@
 
     NSMutableArray *images;
 
-    NSMutableDictionnary *_imageCacheData;
-	
-#ifndef GNUSTEP
+    //NSMutableDictionnary *_imageCacheData;
     int value;
-#endif
 }
 
 - (IBAction) cancel: (IBOutlet)sender;

@@ -197,7 +197,7 @@
 	NSLog(@"error: %@", errorInfo);
 	int result;
         result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
-                FILE_OPERATION_ERROR,PROCEED, STOP, NULL,
+                @"file operation error",@"Continue", @"Cancel", NULL,
                 [errorInfo objectForKey:@"Error"],
                 [errorInfo objectForKey:@"Path"]);
 
@@ -472,6 +472,9 @@
 		   [args addObject:[NSString stringWithFormat:@"--wMu=%@",[mMuSlider stringValue]]];
 		   [args addObject:[NSString stringWithFormat:@"--wSigma=%@",[mSigmaSlider stringValue]]];
 		   
+		   [mProgressIndicator setDoubleValue:0.0];
+		   [mProgressIndicator setMaxValue:(1+4*[images count])];
+		
 		   enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
 		   // kick off the process asynchronously
 		   [enfuseTask startProcess];
@@ -607,11 +610,11 @@
     // add the string (a chunk of the results from locate) to the NSTextView's
     // backing store, in the form of an attributed string
     NSLog(@"%d output is : [%@]",value, output);
-	// TODO        [mProgress incrementBy:1.0];
+	[mProgressIndicator incrementBy:1.0];
 #ifndef GNUSTEP
-	[myBadge badgeApplicationDockIconWithProgress:value/360 insetX:2 y:3];
-	value+=1;
+	[myBadge badgeApplicationDockIconWithProgress:((360*value)/(1+4*[images count])) insetX:2 y:3];
 #endif
+	value+=1;
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
     // setup a selector to be called the next time through the event loop to scroll
@@ -632,7 +635,7 @@
     // change the "Sleuth" button to say "Stop"
     //[mRestoreButton setTitle:@"Stop"];
     [mEnfuseButton setEnabled:NO];
-	// TODO  [mProgress startAnimation:self];
+	[mProgressIndicator startAnimation:self];
 	value = 0;
 }
 
@@ -641,8 +644,8 @@
 // to the ProcessController protocol.
 - (void)processFinished
 {
-    // TODO    [mProgress stopAnimation:self];
-    // TODO    [mProgress setDoubleValue:0];
+    [mProgressIndicator stopAnimation:self];
+    [mProgressIndicator setDoubleValue:0];
 	
     findRunning=NO;
     // change the button's title back for the next search
