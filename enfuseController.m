@@ -6,6 +6,8 @@
 #else
 #import "NSImage-ProportionalScaling.h"
 #endif
+#import "NSFileManager-Extensions.h"
+
 #import "enfuseController.h"
 
 
@@ -100,30 +102,18 @@
     [super dealloc];
 }
 
+- (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
+        NSLog(@"error: %@", errorInfo);
+        int result;
+        result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
+                @"file operation error",@"Continue", @"Cancel", NULL,
+                [errorInfo objectForKey:@"Error"],
+                [errorInfo objectForKey:@"Path"]);
 
-- (NSString *)nextUniqueNameUsing:(NSString *)templatier withFormat:(NSString *)format appending:(NSString *)append
-{
-    static int unique = 1;
-    NSString *tempName = nil;
-	
-    if ([format isEqualToString:@""])
-		format = [templatier pathExtension];
-	
-    NSLog(@"format is : %@",format);
-	
-    tempName =[NSString stringWithFormat:@"%@%@.%@",
-		[templatier stringByDeletingPathExtension],append,
-		//[templatier pathExtension]];
-		format];
-		if ([[NSFileManager defaultManager] fileExistsAtPath:tempName]) {
-			do {
-				tempName =[NSString stringWithFormat:@"%@%@_%d.%@",
-					[templatier stringByDeletingPathExtension],append,unique++,
-					//[templatier pathExtension]];
-					format];
-            } while ([[NSFileManager defaultManager] fileExistsAtPath:tempName]);
-    }
-		return tempName;
+        if (result == NSAlertDefaultReturn)
+                return YES;
+        else
+                return NO;
 }
 
 -(void)openFile:(NSString *)file
@@ -141,16 +131,6 @@
 			// do nothing
 			break;
     }
-}
-
-// return a somewhat globally unique filename ...
-// 
--(NSString*)tempfilename:(NSString *)format;
-{
-      NSString *tempFilename = NSTemporaryDirectory();
-      NSString *tempString = [[NSProcessInfo processInfo] globallyUniqueString];
-      tempFilename = [tempFilename stringByAppendingPathComponent:tempString];
-      return [[NSString stringWithFormat:@"%@.%@",tempFilename,format] retain];
 }
 
 // saving ?
@@ -192,21 +172,6 @@
     return (YES);
 
 } 
-
-- (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
-	NSLog(@"error: %@", errorInfo);
-	int result;
-        result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
-                @"file operation error",@"Continue", @"Cancel", NULL,
-                [errorInfo objectForKey:@"Error"],
-                [errorInfo objectForKey:@"Path"]);
-
-        if (result == NSAlertDefaultReturn)
-                return YES;
-        else
-                return NO;
-}
-
 
 - (void) applicationWillTerminate: (NSNotification *)note 
 { 
@@ -379,6 +344,12 @@
 		   //enfuseTask=nil;
 		   return;
 	   } else {
+		[self runEnfuse:NO];
+	}
+}
+
+- (void) runEnfuse:(BOOL)preview;
+{
 		   // If the task is still sitting around from the last run, release it
 		   if (enfuseTask!=nil)
 			   [enfuseTask release];
@@ -387,6 +358,7 @@
 		   // to the command-line tool, and the contents of the text field that
 		   // displays what the user wants to search on
 		   NSMutableArray *args = [NSMutableArray array];
+		   NSFileManager *fm = [NSFileManager defaultManager];
 		   
 		   NSString *filename = @""; // TODO [[mInputFile stringValue] lastPathComponent];
 									 //NSString *extension = [[filename pathExtension] lowercaseString];
@@ -396,13 +368,13 @@
 		   switch ([[mOutputType selectedCell] tag]) {
 			   case 0 : /* absolute */
 				   outputfile = [[mOuputFile stringValue]
-                                      stringByAppendingPathComponent:[self nextUniqueNameUsing:[mOutFile stringValue]
+                                      stringByAppendingPathComponent:[fm nextUniqueNameUsing:[mOutFile stringValue]
 																					withFormat:[[mOutFormat titleOfSelectedItem] lowercaseString]
 																					 appending:[mAppendTo stringValue] ]];
 				   break;
 			   case 1: /* append */
 				   outputfile = [[mOuputFile stringValue]
-	                                stringByAppendingPathComponent:[self nextUniqueNameUsing:filename
+	                                stringByAppendingPathComponent:[fm nextUniqueNameUsing:filename
 																				  withFormat:[[mOutFormat titleOfSelectedItem] lowercaseString]
 																				   appending:[mAppendTo stringValue] ]];
 				   break;
@@ -411,7 +383,7 @@
 		   }
 		   
 		   [self setOutputfile:outputfile];
-		   [self setTempfile:[self tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
+		   [self setTempfile:[fm tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
 		   NSLog(@"files are : (%@) %@,%@",outputfile,[self outputfile],[self tempfile]);
 
 #ifndef GNUSTEP
@@ -432,19 +404,14 @@
 		   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 		   //NSLog(@"icc : %@",[defaults boolForKey:@"useCIECAM02"]);
 		   if ([defaults boolForKey:@"useCIECAM"]) { // ICC profile
-			   NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
-			   //[args addObject:@"-c"];
+			   //NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
+			   [args addObject:@"-c"];
 		   }
 		   
 		   [args addObject:@"-o"];
 		   [args addObject:[self tempfile]];
 		   
 		   //[args addObject:@"-restore"];
-#if 0
-		   [args addObject:@"dsc_0EV.tif"];
-	       [args addObject:@"dsc_-2EV.tif"];
-		   [args addObject:@"dsc_+2EV.tif"];
-#else	
 		   //[args addObject:[mInputFile stringValue]];
 		   NSDictionary* obj=nil;
 		   NSEnumerator *enumerator = [images objectEnumerator];
@@ -455,8 +422,6 @@
 				   [args addObject:[obj valueForKey:@"file"]]; // TODO : better !
 			   }
 		   }
-		   
-#endif
 		   
 		   //NSLog(@"info jpeg : %@",[mOutQuality stringValue]);
 		   if ([[mOutFormat titleOfSelectedItem] isEqualToString:@"JPEG"] ) {
@@ -484,7 +449,6 @@
 	   }
 	   
 	   
-}
 
 - (IBAction)reset:(id)sender
 {
@@ -860,86 +824,6 @@
 
 #pragma mark -
 #pragma mark TODO
-
-//
-// Temporary Directory stuff: useful code.
-//
-
-BOOL directoryOK(NSString *path)
-{
-    BOOL isDirectory;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if (![fileManager fileExistsAtPath:path isDirectory:&isDirectory] || !isDirectory) {
-        NSDictionary *dict = [NSDictionary dictionaryWithObject:
-            [NSNumber numberWithUnsignedLong:0777]
-														 forKey:NSFilePosixPermissions];
-        if (![fileManager createDirectoryAtPath:path attributes:dict]) 
-            return NO;
-    }
-    return YES;
-}
-
-NSString * existingPath(NSString *path)
-{
-    while (path && ![path isEqualToString:@""]
-		   && ![[NSFileManager defaultManager] fileExistsAtPath:path])
-        path = [path stringByDeletingLastPathComponent];
-    return path;    
-}
-
-NSArray *directoriesToAdd(NSString *path, NSString *existing)
-{
-    NSMutableArray *a = [NSMutableArray arrayWithCapacity:4];
-    if (path != nil && existing != nil) {
-        while (![path isEqualToString:existing]) {
-            [a insertObject:[path lastPathComponent] atIndex:0];
-            path = [path stringByDeletingLastPathComponent];
-        }
-    }
-    return a;
-}
-
-// this will go up the path until it finds an existing directory
-// and will add each subpath and return YES if succeeds, NO if fails:
-
-- (BOOL)createWritableDirectory:(NSString *)path
-{
-    BOOL isDirectory;
-    NSFileManager *fileManager = [NSFileManager defaultManager];
-    if ([fileManager fileExistsAtPath:path isDirectory:&isDirectory]
-        && isDirectory && [fileManager isWritableFileAtPath:path])
-        return YES; // no work to do
-    else {
-        NSString *existing = existingPath(path);
-        NSArray *dirsToAdd = directoriesToAdd(path,existing);
-        int i;
-        BOOL good = YES;
-        for (i = 0; i < [dirsToAdd count]; i++) {
-            existing = [existing stringByAppendingPathComponent:
-                [dirsToAdd objectAtIndex:i]];
-            if (!directoryOK(existing)) {
-                good = NO;
-                break;
-            }
-        }
-        return good;
-    }
-}
-
-- (NSString *)temporaryDirectory
-{
-    NSString *tempDir =[[NSTemporaryDirectory() 
-        stringByAppendingPathComponent:
-        [[NSProcessInfo processInfo] processName]]
-        stringByAppendingPathComponent:NSUserName()];
-	
-    if (! [self createWritableDirectory:tempDir]) {
-        NSLog(@"Couldn't create %@, using %@",tempDir, 
-			  NSTemporaryDirectory());
-        tempDir = NSTemporaryDirectory();
-    }
-    return tempDir;
-}
 
 -(NSString*)outputfile;
 {
