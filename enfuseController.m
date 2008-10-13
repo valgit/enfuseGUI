@@ -21,6 +21,9 @@
 -(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
 -(NSString*)previewfilename:(NSString *)file;
 
+-(void)setDefaults;
+-(void)getDefaults;
+
 @end
 
 @implementation enfuseController
@@ -83,6 +86,8 @@
 	myBadge = [[CTProgressBadge alloc] init];
 	[self reset:mResetButton];
 #endif
+
+	[self getDefaults];
 }
 
 - (id)init
@@ -187,6 +192,8 @@
 		[defaultManager removeFileAtPath:[obj valueForKey:@"thumbfile"] handler:self];
 	}	
 	// [self saveSettings];
+
+	[self setDefaults];
 } 
 
 
@@ -486,11 +493,20 @@
 	[oPanel setAllowsMultipleSelection:NO];
 	[oPanel setAlphaValue:0.95];
 	[oPanel setTitle:@"Select a directory for output"];
-	
+
+	NSString *outputDirectory;
+	NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+	if ([standardUserDefaults stringForKey:@"outputDirectory"]) {
+		outputDirectory = [standardUserDefaults stringForKey:@"outputDirectory"];
+        } else {
+		outputDirectory = NSHomeDirectory();
+		outputDirectory = [outputDirectory stringByAppendingPathComponent:@"Pictures"];
+        }
+
 	// Display the dialog.  If the OK button was pressed,
 	// process the files.
 	//      if ( [oPanel runModalForDirectory:nil file:nil types:fileTypes]
-	if ( [oPanel runModalForDirectory:nil file:nil types:nil]
+	if ( [oPanel runModalForDirectory:outputDirectory file:nil types:nil]
 		 == NSOKButton )
 	{
 		// Get an array containing the full filenames of all
@@ -500,7 +516,13 @@
 		NSString* fileName = [files objectAtIndex:0];
 		NSLog(fileName);
 		[mOuputFile setStringValue:fileName];
-		
+	
+
+		if (standardUserDefaults) {
+			[standardUserDefaults setObject:fileName forKey:@"outputDirectory"];
+			[standardUserDefaults synchronize];
+		}
+	
 	}
 	
 }
@@ -1027,6 +1049,33 @@ http://caffeinatedcocoa.com/blog/?p=7
         }
 #endif
 	[pool release];
+}
+
+// write back the defaults ...
+-(void)setDefaults;
+{
+	NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+
+        if (standardUserDefaults) {
+              [standardUserDefaults setObject:[mOuputFile stringValue] forKey:@"outputDirectory"];
+              [standardUserDefaults setObject:[mOutFile stringValue] forKey:@"outputFile"];
+              [standardUserDefaults setObject:[mAppendTo stringValue] forKey:@"outputAppendTo"];
+              [standardUserDefaults setObject:[mOutQuality stringValue] forKey:@"outputQuality"];
+              [standardUserDefaults synchronize];
+        }
+}
+
+// read back the defaults ...
+-(void)getDefaults;
+{
+	NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+
+        if (standardUserDefaults) {
+              [mOuputFile setStringValue:[standardUserDefaults objectForKey:@"outputDirectory"]];
+              [mOutFile setStringValue:[standardUserDefaults objectForKey:@"outputFile"]];
+              [mAppendTo setStringValue:[standardUserDefaults objectForKey:@"outputAppendTo"]];
+              [mOutQuality setStringValue:[standardUserDefaults objectForKey:@"outputQuality"]];
+        }
 }
 
 
