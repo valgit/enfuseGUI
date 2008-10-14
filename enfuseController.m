@@ -85,9 +85,9 @@
 #ifndef GNUSTEP
 	myBadge = [[CTProgressBadge alloc] init];
 	[self reset:mResetButton];
+	[self getDefaults];
 #endif
 
-	[self getDefaults];
 }
 
 - (id)init
@@ -329,37 +329,23 @@
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
 	if (findRunning) {
-		[enfuseTask stopProcess];
+		//[enfuseTask stopProcess];
+		[enfuseTask cancelProcess];
 		// Release the memory for this wrapper object
-		[enfuseTask release];
-		enfuseTask=nil;
+		//[enfuseTask release];
+		//enfuseTask=nil;
 	}
 	[mEnfuseButton setEnabled:YES];
 	
 }
 
-- (IBAction)enfuse:(id)sender
-{
-	NSLog(@"%s",__PRETTY_FUNCTION__);
-	
-	   if (findRunning) {
-		   NSLog(@"already running");
-		   // This stops the task and calls our callback (-processFinished)
-		   //[enfuseTask stopProcess];
-		   // Release the memory for this wrapper object
-		   //[enfuseTask release];
-		   //enfuseTask=nil;
-		   return;
-	   } else {
-		[self runEnfuse:NO];
-	}
-}
-
-- (void) runEnfuse:(BOOL)preview;
+- (void) runEnfuse /* :(BOOL)preview; */
 {
 		   // If the task is still sitting around from the last run, release it
 		   if (enfuseTask!=nil)
 			   [enfuseTask release];
+
+	 NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 		   // Let's allocate memory for and initialize a new TaskWrapper object, passing
 		   // in ourselves as the controller for this TaskWrapper object, the path
 		   // to the command-line tool, and the contents of the text field that
@@ -447,15 +433,39 @@
 		   [mProgessIndicator setDoubleValue:0.0];
 		   [mProgessIndicator setMaxValue:(2+4*[images count])];
 		
-		   enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
-		   // kick off the process asynchronously
-		   int status = [enfuseTask startProcess];
-		   if (status != 0) {
-			NSRunAlertPanel (NULL, @"running error", @"OK", NULL, NULL);
-		   }
-	   }
-	   
-	   
+	   enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
+	   // kick off the process asynchronously
+	   int status = [enfuseTask startProcess];
+	   if (status != 0) {
+		NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), @"running error", @"OK", NULL, NULL);
+	   } else  {
+
+	   [enfuseTask waitUntilExit];
+	  }
+	[pool release];
+}
+
+- (IBAction)enfuse:(id)sender
+{
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	
+	   if (findRunning) {
+		   NSLog(@"already running");
+		   // This stops the task and calls our callback (-processFinished)
+		   //[enfuseTask stopProcess];
+		   // Release the memory for this wrapper object
+		   //[enfuseTask release];
+		   //enfuseTask=nil;
+		   return;
+	   } else {
+		// run it in another thread ?
+	//NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
+		[NSThread detachNewThreadSelector: @selector(runEnfuse)
+				toTarget:self withObject:nil /* returnValue */];
+		// was [self runEnfuse:NO];
+	}
+}
+
 
 - (IBAction)reset:(id)sender
 {
@@ -592,6 +602,15 @@
 #pragma mark -
 #pragma mark TaskWrapper
 
+// run on main thread (UI)
+- (void) updateProgressBar
+{
+    //[progressIndicator setDoubleValue: [aNumber doubleValue]]];
+    [mProgessIndicator incrementBy:1.0];
+	//NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
+}
+
+
 // This callback is implemented as part of conforming to the ProcessController protocol.
 // It will be called whenever there is output from the TaskWrapper.
 - (void)appendOutput:(NSString *)output
@@ -600,7 +619,10 @@
     // backing store, in the form of an attributed string
     if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
 	[output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
-	[mProgessIndicator incrementBy:1.0];
+	// UI should be on main thread !
+	[self performSelectorOnMainThread: @selector(updateProgressBar) 
+		withObject:nil waitUntilDone:NO];
+	//[mProgessIndicator incrementBy:1.0];
 	value+=1;
 	//NSLog(@"%d output is : [%@]",value, output);
     } /* else {
@@ -646,8 +668,18 @@
     //[mEnfuseButton setTitle:@"Enfuse"];
     [mEnfuseButton setEnabled:YES];
 
+	//NSLog(@"%s thread is : %@ task error=%d",__PRETTY_FUNCTION__,[NSThread currentThread],status);
     //NSLog(@"last output is : %d",value);
+	//[self doAfterEnfuse:status];
+	// execute on main thread just in case ...
+	[self performSelectorOnMainThread: @selector(doAfterEnfuse:) 
+		withObject:[NSNumber numberWithInt:status ] waitUntilDone:NO];
+}
 
+- (void) doAfterEnfuse:(NSNumber *)ostatus
+{
+	int status = [ostatus intValue];
+	NSLog(@"%s thread is : %@ task error=%d",__PRETTY_FUNCTION__,[NSThread currentThread],status);
     if (status == 0) {	
     if([mCopyMeta state]==NSOnState)  {
 		[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
@@ -657,14 +689,20 @@
 			BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:nil];
 		} else {
 			NSString *alert = [[self tempfile] stringByAppendingString: @" do not exist!\nCan't rename"];
-			NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+			NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), 
+				alert, NSLocalizedString(@"OK",nil), NULL, NULL);
 		}
     }
 	
     [self openFile:[self outputfile]];
+    } else if (status == 15) {
+	// in Unix mean SIGTERM ?
+	NSLog(@"%s task exit=%d",__PRETTY_FUNCTION__,status);
     } else {
 	NSLog(@"%s task error=%d",__PRETTY_FUNCTION__,status);
-	NSRunAlertPanel (NULL, @"running error", @"OK", NULL, NULL);
+	NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), 
+			NSLocalizedString(@"running error",@""), 
+			NSLocalizedString(@"OK",nil), NULL, NULL);
     }
 }
 
@@ -1045,7 +1083,7 @@ http://caffeinatedcocoa.com/blog/?p=7
               BOOL result = [fm movePath:tempfile toPath:outputfile handler:nil];
         } else {
               NSString *alert = [tempfile stringByAppendingString: @" do not exist!\nCan't rename"];
-              NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+              NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), alert, @"OK", NULL, NULL);
         }
 #endif
 	[pool release];

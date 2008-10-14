@@ -99,6 +99,8 @@
 - (IBAction) openPresets: (IBOutlet)sender;
 - (IBAction) savePresets: (IBOutlet)sender;
 
-- (void) runEnfuse:(BOOL)preview;
+//- (void) runEnfuse:(BOOL)preview;
+- (void) runEnfuse;
+- (void) doAfterEnfuse:(NSNumber *)status;
 
 @end
