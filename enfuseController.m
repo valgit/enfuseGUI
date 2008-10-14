@@ -443,6 +443,7 @@
 	   [enfuseTask waitUntilExit];
 	  }
 	[pool release];
+	[NSThread exit];
 }
 
 - (IBAction)enfuse:(id)sender
