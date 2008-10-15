@@ -342,8 +342,10 @@
 - (void) runEnfuse /* :(BOOL)preview; */
 {
 		   // If the task is still sitting around from the last run, release it
-		   if (enfuseTask!=nil)
+		   if (enfuseTask!=nil) {
+			NSLog(@"%s not released !",__PRETTY_FUNCTION__);
 			   [enfuseTask release];
+		   }
 
 	 NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 		   // Let's allocate memory for and initialize a new TaskWrapper object, passing
