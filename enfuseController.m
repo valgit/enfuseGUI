@@ -6,9 +6,8 @@
 #else
 #import "NSImage-ProportionalScaling.h"
 #endif
-#import "NSFileManager-Extensions.h"
-
 #import "enfuseController.h"
+#import "NSFileManager-Extensions.h"
 
 
 #include <math.h>
@@ -50,7 +49,7 @@
 -(void)awakeFromNib
 {
     findRunning=NO;
-    enfuseTask=nil;
+    //enfuseTask=nil;
 #if 0
 	NSString *path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] bundlePath],
 		/*@"/greycstoration.app/Contents/MacOS/greycstoration"*/
@@ -87,7 +86,6 @@
 	[self reset:mResetButton];
 	[self getDefaults];
 #endif
-
 }
 
 - (id)init
@@ -96,6 +94,7 @@
         return nil;
 	
 	images = [[NSMutableArray alloc] init];
+	aligntask = nil;
 	
 	return self;
 }
@@ -104,21 +103,36 @@
 {
 	
 	[images release];
+	if (aligntask != nil)
+		[aligntask release];
+	
     [super dealloc];
 }
 
-- (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
-        NSLog(@"error: %@", errorInfo);
-        int result;
-        result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
-                @"file operation error",@"Continue", @"Cancel", NULL,
-                [errorInfo objectForKey:@"Error"],
-                [errorInfo objectForKey:@"Path"]);
 
-        if (result == NSAlertDefaultReturn)
-                return YES;
-        else
-                return NO;
+- (NSString *)nextUniqueNameUsing:(NSString *)templatier withFormat:(NSString *)format appending:(NSString *)append
+{
+    static int unique = 1;
+    NSString *tempName = nil;
+	
+    if ([format isEqualToString:@""])
+		format = [templatier pathExtension];
+	
+    NSLog(@"format is : %@",format);
+	
+    tempName =[NSString stringWithFormat:@"%@%@.%@",
+		[templatier stringByDeletingPathExtension],append,
+		//[templatier pathExtension]];
+		format];
+		if ([[NSFileManager defaultManager] fileExistsAtPath:tempName]) {
+			do {
+				tempName =[NSString stringWithFormat:@"%@%@_%d.%@",
+					[templatier stringByDeletingPathExtension],append,unique++,
+					//[templatier pathExtension]];
+					format];
+            } while ([[NSFileManager defaultManager] fileExistsAtPath:tempName]);
+    }
+		return tempName;
 }
 
 -(void)openFile:(NSString *)file
@@ -136,6 +150,16 @@
 			// do nothing
 			break;
     }
+}
+
+// return a somewhat globally unique filename ...
+// 
+-(NSString*)tempfilename:(NSString *)format;
+{
+      NSString *tempFilename = NSTemporaryDirectory();
+      NSString *tempString = [[NSProcessInfo processInfo] globallyUniqueString];
+      tempFilename = [tempFilename stringByAppendingPathComponent:tempString];
+      return [[NSString stringWithFormat:@"%@.%@",tempFilename,format] retain];
 }
 
 // saving ?
@@ -178,6 +202,21 @@
 
 } 
 
+- (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
+	NSLog(@"error: %@", errorInfo);
+	int result;
+        result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
+                @"file operation error",@"Continue", @"Cancel", NULL,
+                [errorInfo objectForKey:@"Error"],
+                [errorInfo objectForKey:@"Path"]);
+
+        if (result == NSAlertDefaultReturn)
+                return YES;
+        else
+                return NO;
+}
+
+
 - (void) applicationWillTerminate: (NSNotification *)note 
 { 
 	NSFileManager *defaultManager = [NSFileManager defaultManager];
@@ -191,8 +230,16 @@
 		//NSLog(@"removing : %@",[obj valueForKey:@"thumbfile"]);		
 		[defaultManager removeFileAtPath:[obj valueForKey:@"thumbfile"] handler:self];
 	}	
-	// [self saveSettings];
+	NSString *filename;
+	enumerator = [[defaultManager directoryContentsAtPath: NSTemporaryDirectory() ] objectEnumerator];
+		while (nil != (filename = [enumerator nextObject]) ) {
+			//NSLog(@"file : %@",[filename lastPathComponent]);
+			if ([[filename lastPathComponent] hasPrefix:@"align"]) {				
+				[defaultManager removeFileAtPath:[NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),filename] handler:self];
+			}
+		}
 
+	// [self saveSettings];
 	[self setDefaults];
 } 
 
@@ -330,30 +377,186 @@
 	NSLog(@"%s",__PRETTY_FUNCTION__);
 	if (findRunning) {
 		//[enfuseTask stopProcess];
-		[enfuseTask cancelProcess];
 		// Release the memory for this wrapper object
 		//[enfuseTask release];
 		//enfuseTask=nil;
+		[mEnfuseButton setEnabled:YES];
 	}
-	[mEnfuseButton setEnabled:YES];
+	if (aligntask != nil) {
+		NSLog(@"%s should cancel aligning task !",__PRETTY_FUNCTION__);
+		[aligntask setCancel];
+	}
 	
 }
 
-- (void) runEnfuse /* :(BOOL)preview; */
+- (IBAction)enfuse:(id)sender
 {
-		   // If the task is still sitting around from the last run, release it
-		   if (enfuseTask!=nil) {
-			NSLog(@"%s not released !",__PRETTY_FUNCTION__);
-			   [enfuseTask release];
-		   }
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	
+	   if (findRunning) {
+		   NSLog(@"already running");
+		   // This stops the task and calls our callback (-processFinished)
+		   //[enfuseTask stopProcess];
+		   // Release the memory for this wrapper object
+		   //[enfuseTask release];
+		   //enfuseTask=nil;
+		   return;
+	   } else {					   
+			if (aligntask != nil) {
+				NSLog(@"%s need to cleanup autoalign ?",__PRETTY_FUNCTION__);
+				[aligntask release];
+				aligntask = nil;
+			}
+				
+		   if ([mAutoalign state] == NSOnState) {
+				NSLog(@"%s need to autoalign",__PRETTY_FUNCTION__);
+				aligntask = [[alignStackTask alloc] init];
+				[aligntask setGridSize:[mGridSize stringValue]];
+				[aligntask setControlPoints:[mControlPoints stringValue]];
 
-	 NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+				NSDictionary* obj=nil;
+				NSEnumerator *enumerator = [images objectEnumerator];
+		   
+				while ( nil != (obj = [enumerator nextObject]) ) {
+					if ([[obj valueForKey:@"enable"] boolValue]){
+						//NSLog(@"add enable : %@",[obj valueForKey:@"text"]);
+						[aligntask addFile:[obj valueForKey:@"file"]]; // TODO : better !
+					}
+				}
+				
+				[mProgressIndicator setUsesThreadedAnimation:YES];
+				[mProgressIndicator setIndeterminate:YES];
+				[mProgressIndicator setDoubleValue:0.0];
+				[mProgressIndicator setMaxValue:(1+4*[images count])];
+				[mProgressIndicator startAnimation:self];
+				[aligntask setDelegate:self];
+				[aligntask setProgress:mProgressIndicator]; // needed ?
+				[NSThread detachNewThreadSelector:@selector(runAlign)
+                         toTarget:aligntask
+                       withObject:nil];
+				//[mProgressIndicator stopAnimation:self];
+				//[mProgressIndicator setIndeterminate:NO];
+				// for now !
+				[mEnfuseButton setEnabled:NO];
+				return; // testing !
+		   } else {
+				NSLog(@"%s need to enfuse",__PRETTY_FUNCTION__);
+				[self doEnfuse];
+		   }
+			
+		}
+}
+
+- (void)doEnfuse
+{
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+	NSDictionary* file=nil;
+	
+	//
+	// create the output file name 
+	//
+	file = [images objectAtIndex:0];
+	NSString *filename = [[file valueForKey:@"file"] lastPathComponent ]; 
+	
+	// TODO [[mInputFile stringValue] lastPathComponent];
+							  //NSString *extension = [[filename pathExtension] lowercaseString];
+							  //NSLog(filename);
+	NSString* outputfile;
+	
+	switch ([[mOutputType selectedCell] tag]) {
+		case 0 : /* absolute */
+			outputfile = [[mOuputFile stringValue]
+                                      stringByAppendingPathComponent:[self nextUniqueNameUsing:[mOutFile stringValue]
+																					withFormat:[[mOutFormat titleOfSelectedItem] lowercaseString]
+																					 appending:[mAppendTo stringValue] ]];
+			break;
+		case 1: /* append */
+			outputfile = [[mOuputFile stringValue]
+	                                stringByAppendingPathComponent:[self nextUniqueNameUsing:filename
+																				  withFormat:[[mOutFormat titleOfSelectedItem] lowercaseString]
+																				   appending:[mAppendTo stringValue] ]];
+			break;
+		default:
+			NSLog(@"bad selected tag is %d",[[mOutputType selectedCell] tag]);
+	}
+	
+	[self setOutputfile:outputfile];	
+	
+	// 
+	// create the enfuse task
+	if (enfusetask != nil) {
+			NSLog(@"%s need to enfuse task",__PRETTY_FUNCTION__);
+				[enfusetask release];
+				enfusetask = nil;
+	}
+	
+	enfusetask = [[enfuseTask alloc] init];
+	
+	// temporary file for output
+	[enfusetask setOutputfile:[self tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
+	
+	// TODO : check if align_image was run ...
+	if ([mAutoalign state] == NSOnState) {
+		NSLog(@"%s autoalign was run, get align data",__PRETTY_FUNCTION__);
+		// put filenames and full pathnames into the file array
+		NSEnumerator *enumerator = [[[NSFileManager defaultManager] directoryContentsAtPath: NSTemporaryDirectory() ] objectEnumerator];
+		while (filename = [enumerator nextObject]) {
+			//NSLog(@"file : %@",[filename lastPathComponent]);
+			if ([[filename lastPathComponent] hasPrefix:@"align"]) {				
+				[enfusetask addFile:[NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),filename]];
+			}
+		}
+		
+	} else {
+		NSDictionary* obj=nil;
+		NSEnumerator *enumerator = [images objectEnumerator];
+		
+		while ( nil != (obj = [enumerator nextObject]) ) {
+			if ([[obj valueForKey:@"enable"] boolValue]){
+				//NSLog(@"add enable : %@",[obj valueForKey:@"text"]);
+				[enfusetask addFile:[obj valueForKey:@"file"]]; // TODO : better !
+			}
+		}
+	}		
+	
+	if ([[mOutFormat titleOfSelectedItem] isEqualToString:@"JPEG"] ) {
+		[enfusetask addArg:[NSString stringWithFormat:@"--compression=%@",[mOutQuality stringValue]]];
+	} else if ([[mOutFormat titleOfSelectedItem] isEqualToString:@"TIFF"] ) {
+		[enfusetask addArg:@"--compression=LZW"]; // if jpeg !
+	}
+	
+	
+	[enfusetask addArg:[NSString stringWithFormat:@"--wExposure=%@",[mExposureSlider stringValue]]];
+				
+	[enfusetask addArg:[NSString stringWithFormat:@"--wSaturation=%@",[mSaturationSlider stringValue]]];
+	[enfusetask addArg:[NSString stringWithFormat:@"--wContrast=%@",[mContrastSlider stringValue]]];
+				
+	[enfusetask addArg:[NSString stringWithFormat:@"--wMu=%@",[mMuSlider stringValue]]];
+	[enfusetask addArg:[NSString stringWithFormat:@"--wSigma=%@",[mSigmaSlider stringValue]]];
+	
+	[mProgressIndicator setDoubleValue:0.0];
+	[mProgressIndicator setMaxValue:(1+4*[images count])];
+	[mProgressIndicator startAnimation:self];
+	[enfusetask setDelegate:self];
+	[enfusetask setProgress:mProgressIndicator]; // needed ?
+	[NSThread detachNewThreadSelector:@selector(runEnfuse)
+										 toTarget:enfusetask
+									   withObject:nil];
+				
+	[mEnfuseButton setEnabled:NO];
+	return; // testing !				
+}
+
+- (void)runEnfuse
+{
+		      // If the task is still sitting around from the last run, release it
+		   //if (enfuseTask!=nil)
+			 //  [enfuseTask release];
 		   // Let's allocate memory for and initialize a new TaskWrapper object, passing
 		   // in ourselves as the controller for this TaskWrapper object, the path
 		   // to the command-line tool, and the contents of the text field that
 		   // displays what the user wants to search on
 		   NSMutableArray *args = [NSMutableArray array];
-		   NSFileManager *fm = [NSFileManager defaultManager];
 		   
 		   NSString *filename = @""; // TODO [[mInputFile stringValue] lastPathComponent];
 									 //NSString *extension = [[filename pathExtension] lowercaseString];
@@ -363,13 +566,13 @@
 		   switch ([[mOutputType selectedCell] tag]) {
 			   case 0 : /* absolute */
 				   outputfile = [[mOuputFile stringValue]
-                                      stringByAppendingPathComponent:[fm nextUniqueNameUsing:[mOutFile stringValue]
+                                      stringByAppendingPathComponent:[self nextUniqueNameUsing:[mOutFile stringValue]
 																					withFormat:[[mOutFormat titleOfSelectedItem] lowercaseString]
 																					 appending:[mAppendTo stringValue] ]];
 				   break;
 			   case 1: /* append */
 				   outputfile = [[mOuputFile stringValue]
-	                                stringByAppendingPathComponent:[fm nextUniqueNameUsing:filename
+	                                stringByAppendingPathComponent:[self nextUniqueNameUsing:filename
 																				  withFormat:[[mOutFormat titleOfSelectedItem] lowercaseString]
 																				   appending:[mAppendTo stringValue] ]];
 				   break;
@@ -378,7 +581,7 @@
 		   }
 		   
 		   [self setOutputfile:outputfile];
-		   [self setTempfile:[fm tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
+		   [self setTempfile:[self tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
 		   NSLog(@"files are : (%@) %@,%@",outputfile,[self outputfile],[self tempfile]);
 
 #ifndef GNUSTEP
@@ -399,14 +602,14 @@
 		   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 		   //NSLog(@"icc : %@",[defaults boolForKey:@"useCIECAM02"]);
 		   if ([defaults boolForKey:@"useCIECAM"]) { // ICC profile
-			   //NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
-			   [args addObject:@"-c"];
+			   NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
+			   //[args addObject:@"-c"];
 		   }
 		   
 		   [args addObject:@"-o"];
 		   [args addObject:[self tempfile]];
 		   
-		   //[args addObject:@"-restore"];
+		   //[args addObject:@"-restore"];	
 		   //[args addObject:[mInputFile stringValue]];
 		   NSDictionary* obj=nil;
 		   NSEnumerator *enumerator = [images objectEnumerator];
@@ -417,6 +620,7 @@
 				   [args addObject:[obj valueForKey:@"file"]]; // TODO : better !
 			   }
 		   }
+		   
 		   
 		   //NSLog(@"info jpeg : %@",[mOutQuality stringValue]);
 		   if ([[mOutFormat titleOfSelectedItem] isEqualToString:@"JPEG"] ) {
@@ -432,42 +636,15 @@
 		   [args addObject:[NSString stringWithFormat:@"--wMu=%@",[mMuSlider stringValue]]];
 		   [args addObject:[NSString stringWithFormat:@"--wSigma=%@",[mSigmaSlider stringValue]]];
 		   
-		   [mProgessIndicator setDoubleValue:0.0];
-		   [mProgessIndicator setMaxValue:(2+4*[images count])];
+		   [mProgressIndicator setDoubleValue:0.0];
+		   [mProgressIndicator setMaxValue:(1+4*[images count])];
 		
-	   enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
-	   // kick off the process asynchronously
-	   int status = [enfuseTask startProcess];
-	   if (status != 0) {
-		NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), @"running error", @"OK", NULL, NULL);
-	   } else  {
-
-	   [enfuseTask waitUntilExit];
-	  }
-	[pool release];
-	[NSThread exit];
+		   //enfuseTask=[[TaskWrapper alloc] initWithController:self arguments:args];
+		   // kick off the process asynchronously
+		   //[enfuseTask startProcess];
 }
-
-- (IBAction)enfuse:(id)sender
-{
-	NSLog(@"%s",__PRETTY_FUNCTION__);
-	
-	   if (findRunning) {
-		   NSLog(@"already running");
-		   // This stops the task and calls our callback (-processFinished)
-		   //[enfuseTask stopProcess];
-		   // Release the memory for this wrapper object
-		   //[enfuseTask release];
-		   //enfuseTask=nil;
-		   return;
-	   } else {
-		// run it in another thread ?
-	//NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
-		[NSThread detachNewThreadSelector: @selector(runEnfuse)
-				toTarget:self withObject:nil /* returnValue */];
-		// was [self runEnfuse:NO];
-	}
-}
+	   
+	   
 
 
 - (IBAction)reset:(id)sender
@@ -508,12 +685,12 @@
 	[oPanel setTitle:@"Select a directory for output"];
 
 	NSString *outputDirectory;
-	NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
-	if ([standardUserDefaults stringForKey:@"outputDirectory"]) {
-		outputDirectory = [standardUserDefaults stringForKey:@"outputDirectory"];
+        NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+        if ([standardUserDefaults stringForKey:@"outputDirectory"]) {
+                outputDirectory = [standardUserDefaults stringForKey:@"outputDirectory"];
         } else {
-		outputDirectory = NSHomeDirectory();
-		outputDirectory = [outputDirectory stringByAppendingPathComponent:@"Pictures"];
+                outputDirectory = NSHomeDirectory();
+                outputDirectory = [outputDirectory stringByAppendingPathComponent:@"Pictures"];
         }
 
 	// Display the dialog.  If the OK button was pressed,
@@ -529,13 +706,7 @@
 		NSString* fileName = [files objectAtIndex:0];
 		NSLog(fileName);
 		[mOuputFile setStringValue:fileName];
-	
-
-		if (standardUserDefaults) {
-			[standardUserDefaults setObject:fileName forKey:@"outputDirectory"];
-			[standardUserDefaults synchronize];
-		}
-	
+		
 	}
 	
 }
@@ -605,34 +776,17 @@
 #pragma mark -
 #pragma mark TaskWrapper
 
-// run on main thread (UI)
-- (void) updateProgressBar
-{
-    //[progressIndicator setDoubleValue: [aNumber doubleValue]]];
-    [mProgessIndicator incrementBy:1.0];
-	//NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
-}
-
-
 // This callback is implemented as part of conforming to the ProcessController protocol.
 // It will be called whenever there is output from the TaskWrapper.
 - (void)appendOutput:(NSString *)output
 {
     // add the string (a chunk of the results from locate) to the NSTextView's
     // backing store, in the form of an attributed string
-    if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
-	[output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
-	// UI should be on main thread !
-	[self performSelectorOnMainThread: @selector(updateProgressBar) 
-		withObject:nil waitUntilDone:NO];
-	//[mProgessIndicator incrementBy:1.0];
-	value+=1;
-	//NSLog(@"%d output is : [%@]",value, output);
-    } /* else {
-	NSLog(@"%d output is : [%@]",value, output);
-    } */
+    NSLog(@"%d output is : [%@]",value, output);
+	[mProgressIndicator incrementBy:1.0];
 #ifndef GNUSTEP
 	[myBadge badgeApplicationDockIconWithProgress:((360*value)/(1+4*[images count])) insetX:2 y:3];
+	value+=1;
 #endif
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
@@ -653,8 +807,8 @@
     //[resultsTextField setString:@""];
     // change the "Sleuth" button to say "Stop"
     //[mRestoreButton setTitle:@"Stop"];
-    [mEnfuseButton setEnabled:NO];
-	[mProgessIndicator startAnimation:self];
+    //[mEnfuseButton setEnabled:NO];
+	[mProgressIndicator startAnimation:self];
 	value = 0;
 }
 
@@ -663,64 +817,97 @@
 // to the ProcessController protocol.
 - (void)processFinished:(int)status
 {
-    [mProgessIndicator stopAnimation:self];
-    [mProgessIndicator setDoubleValue:0];
+    [mProgressIndicator stopAnimation:self];
+    [mProgressIndicator setDoubleValue:0];
 	
     findRunning=NO;
     // change the button's title back for the next search
     //[mEnfuseButton setTitle:@"Enfuse"];
     [mEnfuseButton setEnabled:YES];
-
-	//NSLog(@"%s thread is : %@ task error=%d",__PRETTY_FUNCTION__,[NSThread currentThread],status);
-    //NSLog(@"last output is : %d",value);
-	//[self doAfterEnfuse:status];
-	// execute on main thread just in case ...
-	[self performSelectorOnMainThread: @selector(doAfterEnfuse:) 
-		withObject:[NSNumber numberWithInt:status ] waitUntilDone:NO];
-}
-
-- (void) doAfterEnfuse:(NSNumber *)ostatus
-{
-	int status = [ostatus intValue];
-	NSLog(@"%s thread is : %@ task error=%d",__PRETTY_FUNCTION__,[NSThread currentThread],status);
-    if (status == 0) {	
+	
     if([mCopyMeta state]==NSOnState)  {
 		[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
     } else {
 		NSFileManager *fm = [NSFileManager defaultManager];
 		if ([fm fileExistsAtPath:([self tempfile])]){
-			BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:nil];
+			BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:self];
 		} else {
 			NSString *alert = [[self tempfile] stringByAppendingString: @" do not exist!\nCan't rename"];
-			NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), 
-				alert, NSLocalizedString(@"OK",nil), NULL, NULL);
+			NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""),
+				 alert, NSLocalizedString(@"OK",nil), NULL, NULL);
 		}
     }
 	
     [self openFile:[self outputfile]];
-    } else if (status == 15) {
-	// in Unix mean SIGTERM ?
-	NSLog(@"%s task exit=%d",__PRETTY_FUNCTION__,status);
-    } else {
-	NSLog(@"%s task error=%d",__PRETTY_FUNCTION__,status);
-	NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), 
-			NSLocalizedString(@"running error",@""), 
-			NSLocalizedString(@"OK",nil), NULL, NULL);
-    }
 }
 
 // If the user closes the search window, let's just quit
 -(BOOL)windowShouldClose:(id)sender
 {
     if (findRunning == YES) {
-		[enfuseTask stopProcess];
+		//[enfuseTask stopProcess];
 		// Release the memory for this wrapper object
-		[enfuseTask release];
-		enfuseTask=nil;
+		//[enfuseTask release];
+		//enfuseTask=nil;
     }
 	
     [NSApp terminate:nil];
     return YES;
+}
+
+#pragma mark -
+
+//
+// delegate for align_task thread
+-(void)alignFinish:(int)status;
+{
+	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
+	[mProgressIndicator stopAnimation:self];
+	[mProgressIndicator setIndeterminate:NO];
+	int canceled = [aligntask isCancel];
+	//[aligntask release];
+	//aligntask = nil;
+	if (status == 0 && canceled != YES) {
+		[self doEnfuse];
+	} else {
+		 [mEnfuseButton setEnabled:YES];
+	}
+}
+
+//
+// delegate for enfuse task thread 
+-(void)enfuseFinish:(int)status;
+{
+	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
+	[mProgressIndicator stopAnimation:self];
+    [mProgressIndicator setDoubleValue:0];
+	
+    findRunning=NO;
+    // change the button's title back for the next search
+    //[mEnfuseButton setTitle:@"Enfuse"];
+    [mEnfuseButton setEnabled:YES];
+	int canceled = [enfusetask isCancel];
+	if (status  == 0 && canceled != YES) {
+		if([mCopyMeta state]==NSOnState)  {
+			[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[enfusetask outputfile]];
+		} else {
+			NSFileManager *fm = [NSFileManager defaultManager];
+			if ([fm fileExistsAtPath:([enfusetask outputfile])]){
+				BOOL result = [fm movePath:[enfusetask outputfile] toPath:[self outputfile] handler:self];
+			} else {
+				NSString *alert;
+				NSString *file = [enfusetask outputfile];
+				if (file != nil)
+					alert = [file stringByAppendingString: @" do not exist!\nCan't rename"];
+				else
+					alert = @"no file name !";
+				NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+			}
+		}
+		
+		[self openFile:[self outputfile]];
+	}
+	[mEnfuseButton setEnabled:YES];
 }
 
 #pragma mark -
@@ -1095,7 +1282,7 @@ http://caffeinatedcocoa.com/blog/?p=7
 // write back the defaults ...
 -(void)setDefaults;
 {
-	NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+        NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
 
         if (standardUserDefaults) {
               [standardUserDefaults setObject:[mOuputFile stringValue] forKey:@"outputDirectory"];
@@ -1109,7 +1296,7 @@ http://caffeinatedcocoa.com/blog/?p=7
 // read back the defaults ...
 -(void)getDefaults;
 {
-	NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
+        NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
 
         if (standardUserDefaults) {
               [mOuputFile setStringValue:[standardUserDefaults objectForKey:@"outputDirectory"]];
@@ -1118,6 +1305,5 @@ http://caffeinatedcocoa.com/blog/?p=7
               [mOutQuality setStringValue:[standardUserDefaults objectForKey:@"outputQuality"]];
         }
 }
-
 
 @end

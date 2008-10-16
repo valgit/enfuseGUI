@@ -4,6 +4,8 @@
 #import "CTProgressBadge.h"
 #import "TaskWrapper.h"
 #import "MyPrefsWindowController.h"
+#import "alignStackTask.h"
+#import "enfuseTask.h"
 
 @interface enfuseController : NSObject <TaskWrapperController>
 {
@@ -43,6 +45,13 @@
   IBOutlet NSMatrix *mOutputType;
   IBOutlet NSSlider *mOutputQualitySlider; 
   
+  // autoalign options
+  IBOutlet NSButton* mAutoalign;
+  IBOutlet NSButton* mAssumeFisheye;
+  IBOutlet NSButton* mOptimizeFOV;
+  IBOutlet NSTextField* mControlPoints;
+  IBOutlet NSTextField* mGridSize;
+  
   IBOutlet NSArrayController *mImageArrayCtrl;
 
   // open file ?
@@ -54,23 +63,21 @@
   IBOutlet NSButton* mCopyShutter;
   IBOutlet NSButton* mCopyFocal;
 
-#ifndef GNUSTEP
+  IBOutlet NSProgressIndicator *mProgressIndicator;
   CTProgressBadge *myBadge;
-#endif
-
-  IBOutlet NSProgressIndicator *mProgessIndicator; // !!
-
   @private
     BOOL findRunning;
-    TaskWrapper *enfuseTask;
+    //TaskWrapper *enfuseTask;
 
     NSString* _outputfile;
     NSString* _tmpfile;
 
     NSMutableArray *images;
-
-    //NSMutableDictionnary *_imageCacheData;
-    int value;
+	
+	int value;
+	
+	alignStackTask* aligntask;
+	enfuseTask* enfusetask;
 }
 
 - (IBAction) cancel: (IBOutlet)sender;
@@ -99,8 +106,8 @@
 - (IBAction) openPresets: (IBOutlet)sender;
 - (IBAction) savePresets: (IBOutlet)sender;
 
-//- (void) runEnfuse:(BOOL)preview;
-- (void) runEnfuse;
-- (void) doAfterEnfuse:(NSNumber *)status;
+-(void)alignFinish:(int)status;
+- (void)runEnfuse;
+- (void)doEnfuse;
 
 @end
