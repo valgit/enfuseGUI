@@ -86,6 +86,7 @@
 	[self reset:mResetButton];
 	[self getDefaults];
 #endif
+	[self setTempPath:NSTemporaryDirectory()]; // TODO better
 }
 
 - (id)init
@@ -410,7 +411,7 @@
 				
 		   if ([mAutoalign state] == NSOnState) {
 				NSLog(@"%s need to autoalign",__PRETTY_FUNCTION__);
-				aligntask = [[alignStackTask alloc] init];
+				aligntask = [[alignStackTask alloc] initWithPath:[self temppath]];
 				[aligntask setGridSize:[mGridSize stringValue]];
 				[aligntask setControlPoints:[mControlPoints stringValue]];
 
@@ -499,11 +500,11 @@
 	if ([mAutoalign state] == NSOnState) {
 		NSLog(@"%s autoalign was run, get align data",__PRETTY_FUNCTION__);
 		// put filenames and full pathnames into the file array
-		NSEnumerator *enumerator = [[[NSFileManager defaultManager] directoryContentsAtPath: NSTemporaryDirectory() ] objectEnumerator];
-		while (filename = [enumerator nextObject]) {
+		NSEnumerator *enumerator = [[[NSFileManager defaultManager] directoryContentsAtPath: [self temppath] ] objectEnumerator];
+		while (nil != (filename = [enumerator nextObject])) {
 			//NSLog(@"file : %@",[filename lastPathComponent]);
 			if ([[filename lastPathComponent] hasPrefix:@"align"]) {				
-				[enfusetask addFile:[NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),filename]];
+				[enfusetask addFile:[NSString stringWithFormat:@"%@/%@",[self temppath],filename]];
 			}
 		}
 		
@@ -670,6 +671,18 @@
 - (IBAction) about: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+#if 0
+// Method to load the .nib file for the info panel.
+    if (!infoPanel) {
+        if (![NSBundle loadNibNamed:@"InfoPanel" owner:self])  {
+            NSLog(@"Failed to load InfoPanel.nib");
+            NSBeep();
+            return;
+        }
+        [infoPanel center];
+    }
+    [infoPanel makeKeyAndOrderFront:nil];
+#endif
 }
 
 - (IBAction) chooseOutputDirectory: (IBOutlet)sender;
@@ -1100,6 +1113,21 @@
         _tmpfile = [file copy];
 	}
 }
+
+-(NSString*)temppath;
+{
+        return _tmppath;
+}
+
+-(void)setTempPath:(NSString *)file;
+{
+        if (_tmppath != file) {
+                [_tmppath release];
+        _tmppath = [file copy];
+        }
+}
+
+
 
 - (IBAction)revealInFinder:(IBOutlet)sender {
     BOOL isDir;

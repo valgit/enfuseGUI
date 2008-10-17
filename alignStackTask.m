@@ -5,8 +5,8 @@
 #import "alignStackTask.h"
 
 @implementation alignStackTask
-
--(id)init {
+    
+-(id)initWithPath:(NSString*)tmp_path {
   self = [super init];
   if (self) {
     //NSLog(@"%s",__PRETTY_FUNCTION__);
@@ -19,7 +19,7 @@
 	[args addObject:align_path];
 	[args addObject:@"-a"];
 	
-	NSString *tempDirectoryPath = [NSString stringWithFormat:@"%@/align", NSTemporaryDirectory()];
+	NSString *tempDirectoryPath = [NSString stringWithFormat:@"%@/align", tmp_path];
 	
 	[args addObject:tempDirectoryPath];
 	

@@ -71,6 +71,7 @@
 
     NSString* _outputfile;
     NSString* _tmpfile;
+    NSString* _tmppath;
 
     NSMutableArray *images;
 	
@@ -100,6 +101,8 @@
 -(void)setOutputfile:(NSString *)file;
 -(NSString*)tempfile;
 -(void)setTempfile:(NSString *)file;
+-(NSString*)temppath;
+-(void)setTempPath:(NSString *)file;
 
 - (IBAction)openPreferences:(id)sender;
 

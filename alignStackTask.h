@@ -21,7 +21,7 @@
   BOOL cancel;
 }
 
--(id)init;
+-(id)initWithPath:(NSString*)tmp_path;
 -(void)dealloc;
 
 - (id)delegate;
@@ -54,3 +54,4 @@
 -(void)alignFinish:(int)status;
 
 @end 
+
