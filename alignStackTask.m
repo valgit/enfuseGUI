@@ -77,6 +77,7 @@
 -(void)setCancel;
 {
 	cancel = YES;
+	[alignTask cancelProcess];
 }
 
 - (BOOL)isCancel;

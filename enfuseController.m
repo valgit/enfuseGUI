@@ -23,6 +23,8 @@
 -(void)setDefaults;
 -(void)getDefaults;
 
+-(NSString *)initTempDirectory;
+
 @end
 
 @implementation enfuseController
@@ -86,7 +88,8 @@
 	[self reset:mResetButton];
 	[self getDefaults];
 #endif
-	[self setTempPath:NSTemporaryDirectory()]; // TODO better
+	//[self setTempPath:NSTemporaryDirectory()]; // TODO better
+	[self setTempPath:[self initTempDirectory]];
 }
 
 - (id)init
@@ -107,6 +110,9 @@
 	if (aligntask != nil)
 		[aligntask release];
 	
+	if (enfusetask != nil)
+		[enfusetask release];
+
     [super dealloc];
 }
 
@@ -232,11 +238,11 @@
 		[defaultManager removeFileAtPath:[obj valueForKey:@"thumbfile"] handler:self];
 	}	
 	NSString *filename;
-	enumerator = [[defaultManager directoryContentsAtPath: NSTemporaryDirectory() ] objectEnumerator];
+	enumerator = [[defaultManager directoryContentsAtPath: [self temppath] ] objectEnumerator];
 		while (nil != (filename = [enumerator nextObject]) ) {
 			//NSLog(@"file : %@",[filename lastPathComponent]);
 			if ([[filename lastPathComponent] hasPrefix:@"align"]) {				
-				[defaultManager removeFileAtPath:[NSString stringWithFormat:@"%@/%@",NSTemporaryDirectory(),filename] handler:self];
+				[defaultManager removeFileAtPath:[NSString stringWithFormat:@"%@/%@",[self temppath],filename] handler:self];
 			}
 		}
 
@@ -381,7 +387,12 @@
 		// Release the memory for this wrapper object
 		//[enfuseTask release];
 		//enfuseTask=nil;
+                //[enfuseTask cancelProcess];
 		[mEnfuseButton setEnabled:YES];
+	}
+	if (enfusetask != nil) {
+		NSLog(@"%s should cancel enfuse task !",__PRETTY_FUNCTION__);
+		[enfusetask setCancel];
 	}
 	if (aligntask != nil) {
 		NSLog(@"%s should cancel aligning task !",__PRETTY_FUNCTION__);
@@ -603,10 +614,21 @@
 		   NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 		   //NSLog(@"icc : %@",[defaults boolForKey:@"useCIECAM02"]);
 		   if ([defaults boolForKey:@"useCIECAM"]) { // ICC profile
-			   NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
-			   //[args addObject:@"-c"];
+			   //NSLog(@"%s use ICC !",__PRETTY_FUNCTION__);
+			   [args addObject:@"-c"];
 		   }
-		   
+		  	
+		   NSString *cachesize = [defaults stringForKey:@"cachesize"];
+		   if (![cachesize isEqualToString:@"default" ]) {
+			   [args addObject:@"-m"];
+			   [args addObject:cachesize];
+		   }
+		   NSString *blocksize = [defaults stringForKey:@"blocksize"];
+		   if (![blocksize isEqualToString:@"default" ]) {
+			   [args addObject:@"-b"];
+			   [args addObject:blocksize];
+		   }
+
 		   [args addObject:@"-o"];
 		   [args addObject:[self tempfile]];
 		   
@@ -1332,6 +1354,38 @@ http://caffeinatedcocoa.com/blog/?p=7
               [mAppendTo setStringValue:[standardUserDefaults objectForKey:@"outputAppendTo"]];
               [mOutQuality setStringValue:[standardUserDefaults objectForKey:@"outputQuality"]];
         }
+}
+
+-(NSString *)initTempDirectory;
+{
+        // Create our temporary directory
+                NSString* tempDirectoryPath = [NSString stringWithFormat:@"%@/enfuseGUI", 
+				NSTemporaryDirectory()];
+
+                // If it doesn't exist, create it
+                NSFileManager *fileManager = [NSFileManager defaultManager];
+                BOOL isDirectory;
+                if (![fileManager fileExistsAtPath:tempDirectoryPath isDirectory:&isDirectory])
+                {
+                        [fileManager createDirectoryAtPath:tempDirectoryPath attributes:nil];
+                }
+                else if (isDirectory) // If a folder already exists, empty it.
+                {
+                        NSArray *contents = [fileManager directoryContentsAtPath:tempDirectoryPath];
+                        int i;
+                        for (i = 0; i < [contents count]; i++)
+                        {
+                                NSString *tempFilePath = [NSString stringWithFormat:@"%@/%@", 
+					tempDirectoryPath, [contents objectAtIndex:i]];
+                                [fileManager removeFileAtPath:tempFilePath handler:nil];
+                        }
+                }
+                else // Delete the old file and create a new directory
+                {
+                        [fileManager removeFileAtPath:tempDirectoryPath handler:nil];
+                        [fileManager createDirectoryAtPath:tempDirectoryPath attributes:nil];
+                }
+		return tempDirectoryPath;
 }
 
 @end

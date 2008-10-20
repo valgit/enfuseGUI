@@ -94,6 +94,7 @@
 -(void)setCancel;
 {
 	cancel = YES;
+	[enfusingTask cancelProcess];
 }
 
 - (BOOL)isCancel;
