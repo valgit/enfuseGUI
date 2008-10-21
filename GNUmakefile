@@ -1,7 +1,9 @@
 include $(GNUSTEP_MAKEFILES)/common.make
 
 APP_NAME = enfuseGUI
-enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m NSImage-ProportionalScaling.m NSFileManager-Extensions.m alignStackTask.m enfuseTask.m
+enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m \
+NSImage-ProportionalScaling.m NSFileManager-Extensions.m  \
+alignStackTask.m enfuseTask.m ExportOptionsController.m
 
 #NSBezierPath+Additions.m
 #enfuseGUI_OBJC_LIBS = -lexiv2
@@ -14,6 +16,7 @@ enfuseGUI_LANGUAGES = English
 enfuseGUI_LOCALIZED_RESOURCE_FILES = \
 MainMenu.nib  \
 Preferences.nib  \
+ExportOptionsSheet.nib \
 InfoPlist.strings 
 
 enfuseGUI_RESOURCE_FILES = \

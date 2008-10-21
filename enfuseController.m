@@ -9,7 +9,6 @@
 #import "enfuseController.h"
 #import "NSFileManager-Extensions.h"
 
-
 #include <math.h>
 
 // Categories : private methods
@@ -113,6 +112,8 @@
 	if (enfusetask != nil)
 		[enfusetask release];
 
+	if (exportOptionsSheetController != nil)
+		[exportOptionsSheetController release];
     [super dealloc];
 }
 
@@ -1161,10 +1162,23 @@
     }
 }
 
+- (IBAction)preferencesSaving:(id)sender;
+{
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+}
+
 - (IBAction)openPreferences:(id)sender
 {
+	NSLog(@"%s",__PRETTY_FUNCTION__);
+#if 0
 	[[MyPrefsWindowController sharedPrefsWindowController] showWindow:nil];
 	(void)sender;
+#else
+	if (exportOptionsSheetController == nil) 
+		exportOptionsSheetController = [[ExportOptionsController alloc] init ];
+
+	[exportOptionsSheetController runSheet:window selector:@selector(preferencesSaving:) target:self];
+#endif
 }
 
 #if 0

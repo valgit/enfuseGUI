@@ -6,6 +6,7 @@
 #import "MyPrefsWindowController.h"
 #import "alignStackTask.h"
 #import "enfuseTask.h"
+#import "ExportOptionsController.h"
 
 @interface enfuseController : NSObject <TaskWrapperController>
 {
@@ -65,6 +66,9 @@
 
   IBOutlet NSProgressIndicator *mProgressIndicator;
   CTProgressBadge *myBadge;
+
+  IBOutlet ExportOptionsController* exportOptionsSheetController;
+
   @private
     BOOL findRunning;
     //TaskWrapper *enfuseTask;
