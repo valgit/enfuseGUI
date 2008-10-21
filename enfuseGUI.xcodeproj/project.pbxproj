@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		713D55AD0EAE065D00546CEC /* exportOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 713D55AC0EAE065D00546CEC /* exportOptions.m */; };
 		7140F7490E8A551E00A56BB7 /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7460E8A551E00A56BB7 /* TaskWrapper.m */; };
 		7140F74A0E8A551E00A56BB7 /* enfuseController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7470E8A551E00A56BB7 /* enfuseController.m */; };
 		71955B680E8A9D4F008CC333 /* Remove.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 71955B660E8A9D4F008CC333 /* Remove.tiff */; };
@@ -16,6 +17,11 @@
 		71B7F8660E8D01F400E0A1BF /* Preferences.nib in Resources */ = {isa = PBXBuildFile; fileRef = 71B7F8640E8D01F400E0A1BF /* Preferences.nib */; };
 		71B7F8730E8D024F00E0A1BF /* update.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 71B7F8720E8D024F00E0A1BF /* update.tiff */; };
 		71B7F8750E8D026C00E0A1BF /* general.png in Resources */ = {isa = PBXBuildFile; fileRef = 71B7F8740E8D026C00E0A1BF /* general.png */; };
+		71F3D5E50EADBF6F007EFED9 /* alignStackTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F3D5E00EADBF6F007EFED9 /* alignStackTask.m */; };
+		71F3D5E60EADBF6F007EFED9 /* CTProgressBadge.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F3D5E20EADBF6F007EFED9 /* CTProgressBadge.m */; };
+		71F3D5E70EADBF6F007EFED9 /* enfuseTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F3D5E40EADBF6F007EFED9 /* enfuseTask.m */; };
+		71F501580EADF04100CB129D /* ExportOptionsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F501570EADF04100CB129D /* ExportOptionsController.m */; };
+		71F5015D0EADF1FB00CB129D /* ExportOptions.nib in Resources */ = {isa = PBXBuildFile; fileRef = 71F5015B0EADF1FB00CB129D /* ExportOptions.nib */; };
 		8D11072A0486CEB800E47090 /* MainMenu.nib in Resources */ = {isa = PBXBuildFile; fileRef = 29B97318FDCFA39411CA2CEA /* MainMenu.nib */; };
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
@@ -31,6 +37,8 @@
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* enfuseGUI_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = enfuseGUI_Prefix.pch; sourceTree = "<group>"; };
+		713D55AB0EAE065D00546CEC /* exportOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = exportOptions.h; sourceTree = "<group>"; };
+		713D55AC0EAE065D00546CEC /* exportOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = exportOptions.m; sourceTree = "<group>"; };
 		7140F7450E8A551E00A56BB7 /* TaskWrapper.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = TaskWrapper.h; sourceTree = "<group>"; };
 		7140F7460E8A551E00A56BB7 /* TaskWrapper.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = TaskWrapper.m; sourceTree = "<group>"; };
 		7140F7470E8A551E00A56BB7 /* enfuseController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = enfuseController.m; sourceTree = "<group>"; };
@@ -44,6 +52,15 @@
 		71B7F8650E8D01F400E0A1BF /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/Preferences.nib; sourceTree = "<group>"; };
 		71B7F8720E8D024F00E0A1BF /* update.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = update.tiff; path = ../ImagePrinter/update.tiff; sourceTree = SOURCE_ROOT; };
 		71B7F8740E8D026C00E0A1BF /* general.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = general.png; sourceTree = "<group>"; };
+		71F3D5DF0EADBF6F007EFED9 /* alignStackTask.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = alignStackTask.h; sourceTree = "<group>"; };
+		71F3D5E00EADBF6F007EFED9 /* alignStackTask.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = alignStackTask.m; sourceTree = "<group>"; };
+		71F3D5E10EADBF6F007EFED9 /* CTProgressBadge.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = CTProgressBadge.h; sourceTree = "<group>"; };
+		71F3D5E20EADBF6F007EFED9 /* CTProgressBadge.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = CTProgressBadge.m; sourceTree = "<group>"; };
+		71F3D5E30EADBF6F007EFED9 /* enfuseTask.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = enfuseTask.h; sourceTree = "<group>"; };
+		71F3D5E40EADBF6F007EFED9 /* enfuseTask.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = enfuseTask.m; sourceTree = "<group>"; };
+		71F501560EADF04100CB129D /* ExportOptionsController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ExportOptionsController.h; sourceTree = "<group>"; };
+		71F501570EADF04100CB129D /* ExportOptionsController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = ExportOptionsController.m; sourceTree = "<group>"; };
+		71F5015C0EADF1FB00CB129D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/ExportOptions.nib; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* enfuseGUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = enfuseGUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -63,6 +80,12 @@
 		080E96DDFE201D6D7F000001 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				71F3D5DF0EADBF6F007EFED9 /* alignStackTask.h */,
+				71F3D5E00EADBF6F007EFED9 /* alignStackTask.m */,
+				71F3D5E10EADBF6F007EFED9 /* CTProgressBadge.h */,
+				71F3D5E20EADBF6F007EFED9 /* CTProgressBadge.m */,
+				71F3D5E30EADBF6F007EFED9 /* enfuseTask.h */,
+				71F3D5E40EADBF6F007EFED9 /* enfuseTask.m */,
 				7140F7450E8A551E00A56BB7 /* TaskWrapper.h */,
 				7140F7460E8A551E00A56BB7 /* TaskWrapper.m */,
 				7140F7470E8A551E00A56BB7 /* enfuseController.m */,
@@ -71,6 +94,10 @@
 				71B7F84B0E8D005C00E0A1BF /* DBPrefsWindowController.h */,
 				71B7F84C0E8D005C00E0A1BF /* MyPrefsWindowController.h */,
 				71B7F84D0E8D005C00E0A1BF /* MyPrefsWindowController.m */,
+				71F501560EADF04100CB129D /* ExportOptionsController.h */,
+				71F501570EADF04100CB129D /* ExportOptionsController.m */,
+				713D55AB0EAE065D00546CEC /* exportOptions.h */,
+				713D55AC0EAE065D00546CEC /* exportOptions.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -130,6 +157,7 @@
 				8D1107310486CEB800E47090 /* Info.plist */,
 				089C165CFE840E0CC02AAC07 /* InfoPlist.strings */,
 				29B97318FDCFA39411CA2CEA /* MainMenu.nib */,
+				71F5015B0EADF1FB00CB129D /* ExportOptions.nib */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -202,6 +230,7 @@
 				71B7F8660E8D01F400E0A1BF /* Preferences.nib in Resources */,
 				71B7F8730E8D024F00E0A1BF /* update.tiff in Resources */,
 				71B7F8750E8D026C00E0A1BF /* general.png in Resources */,
+				71F5015D0EADF1FB00CB129D /* ExportOptions.nib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -217,6 +246,11 @@
 				7140F74A0E8A551E00A56BB7 /* enfuseController.m in Sources */,
 				71B7F84E0E8D005C00E0A1BF /* DBPrefsWindowController.m in Sources */,
 				71B7F84F0E8D005C00E0A1BF /* MyPrefsWindowController.m in Sources */,
+				71F3D5E50EADBF6F007EFED9 /* alignStackTask.m in Sources */,
+				71F3D5E60EADBF6F007EFED9 /* CTProgressBadge.m in Sources */,
+				71F3D5E70EADBF6F007EFED9 /* enfuseTask.m in Sources */,
+				71F501580EADF04100CB129D /* ExportOptionsController.m in Sources */,
+				713D55AD0EAE065D00546CEC /* exportOptions.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +279,14 @@
 				71B7F8650E8D01F400E0A1BF /* English */,
 			);
 			name = Preferences.nib;
+			sourceTree = "<group>";
+		};
+		71F5015B0EADF1FB00CB129D /* ExportOptions.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				71F5015C0EADF1FB00CB129D /* English */,
+			);
+			name = ExportOptions.nib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
@@ -285,6 +327,7 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
@@ -295,6 +338,7 @@
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;

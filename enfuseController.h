@@ -7,6 +7,7 @@
 #import "alignStackTask.h"
 #import "enfuseTask.h"
 #import "ExportOptionsController.h"
+#import "exportOptions.h"
 
 @interface enfuseController : NSObject <TaskWrapperController>
 {
@@ -83,6 +84,8 @@
 	
 	alignStackTask* aligntask;
 	enfuseTask* enfusetask;
+	
+	exportOptions* options;
 }
 
 - (IBAction) cancel: (IBOutlet)sender;

@@ -98,6 +98,7 @@
 	
 	images = [[NSMutableArray alloc] init];
 	aligntask = nil;
+	options = [[exportOptions alloc] init];
 	
 	return self;
 }
@@ -114,6 +115,10 @@
 
 	if (exportOptionsSheetController != nil)
 		[exportOptionsSheetController release];
+		
+	if (options != nil)
+		[options dealloc];
+		
     [super dealloc];
 }
 
@@ -1165,6 +1170,13 @@
 - (IBAction)preferencesSaving:(id)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+	[options setAddKeyword:[exportOptionsSheetController AddKeyword]];
+	[options setImportInAperture:[exportOptionsSheetController ImportInAperture]];
+	[options setStackWithOriginal:[exportOptionsSheetController stackWithOriginal]];
+	if ([options addKeyword] == YES)
+		[options setKeyword:[exportOptionsSheetController keyword]];
+	else 
+		[options setKeyword:nil];
 }
 
 - (IBAction)openPreferences:(id)sender
@@ -1177,6 +1189,12 @@
 	if (exportOptionsSheetController == nil) 
 		exportOptionsSheetController = [[ExportOptionsController alloc] init ];
 
+    [exportOptionsSheetController setImportInAperture:[options importInAperture]];
+	[exportOptionsSheetController setAddKeyword:[options addKeyword]];
+	[exportOptionsSheetController stackWithOriginal:[options stackWithOriginal]];
+	if ([options addKeyword])
+		[exportOptionsSheetController setKeyword:[options keyword]];
+		
 	[exportOptionsSheetController runSheet:window selector:@selector(preferencesSaving:) target:self];
 #endif
 }
@@ -1349,10 +1367,18 @@ http://caffeinatedcocoa.com/blog/?p=7
         NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
 
         if (standardUserDefaults) {
+			
               [standardUserDefaults setObject:[mOuputFile stringValue] forKey:@"outputDirectory"];
               [standardUserDefaults setObject:[mOutFile stringValue] forKey:@"outputFile"];
               [standardUserDefaults setObject:[mAppendTo stringValue] forKey:@"outputAppendTo"];
               [standardUserDefaults setObject:[mOutQuality stringValue] forKey:@"outputQuality"];
+
+			  [standardUserDefaults setObject:[NSNumber numberWithBool:[options importInAperture]] forKey:@"importInAperture"];
+			  [standardUserDefaults setObject:[NSNumber numberWithBool:[options stackWithOriginal]] forKey:@"stackWithOriginal"];
+			  [standardUserDefaults setObject:[NSNumber numberWithBool:[options addKeyword]] forKey:@"addKeyword"];
+			  if ([options addKeyword])
+				[standardUserDefaults setObject:[options keyword] forKey:@"keyword"];
+			  
               [standardUserDefaults synchronize];
         }
 }
@@ -1363,10 +1389,29 @@ http://caffeinatedcocoa.com/blog/?p=7
         NSUserDefaults *standardUserDefaults = [NSUserDefaults standardUserDefaults];
 
         if (standardUserDefaults) {
-              [mOuputFile setStringValue:[standardUserDefaults objectForKey:@"outputDirectory"]];
-              [mOutFile setStringValue:[standardUserDefaults objectForKey:@"outputFile"]];
-              [mAppendTo setStringValue:[standardUserDefaults objectForKey:@"outputAppendTo"]];
-              [mOutQuality setStringValue:[standardUserDefaults objectForKey:@"outputQuality"]];
+			  NSString *temp;
+			  
+			  temp = [standardUserDefaults objectForKey:@"outputDirectory"];
+			  if (temp != nil)
+				[mOuputFile setStringValue:temp];
+			  
+			  temp = [standardUserDefaults objectForKey:@"outputFile"];
+			  if (temp != nil)
+				[mOutFile setStringValue:temp];
+			  
+			  temp = [standardUserDefaults objectForKey:@"outputAppendTo"];
+			  if (temp != nil)
+				[mAppendTo setStringValue:temp];
+				
+			  temp = [standardUserDefaults objectForKey:@"outputQuality"];
+			  if (temp != nil)
+				[mOutQuality setStringValue:temp];
+				
+			[options setImportInAperture:[standardUserDefaults boolForKey:@"importInAperture"]];
+			[options setStackWithOriginal:[standardUserDefaults boolForKey:@"stackWithOriginal"]];
+			[options setAddKeyword:[standardUserDefaults boolForKey:@"addKeyword"]];
+			if ([options addKeyword])
+				[options setKeyword:[standardUserDefaults objectForKey:@"keyword"]];
         }
 }
 
