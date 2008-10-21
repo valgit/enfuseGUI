@@ -68,6 +68,26 @@
 - (IBAction)chooseDirectory:(id)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+	   NSOpenPanel* oPanel = [NSOpenPanel openPanel];
+
+        [oPanel setCanChooseDirectories:YES];
+        [oPanel setCanChooseFiles:NO];
+        [oPanel setCanCreateDirectories:YES];
+        [oPanel setAllowsMultipleSelection:NO];
+        [oPanel setAlphaValue:0.95];
+        [oPanel setTitle:@"Select a directory for output"];
+
+	if ( [oPanel runModalForDirectory:[mExportDirectory stringValue] file:nil types:nil]
+                 == NSOKButton ) {
+                // Get an array containing the full filenames of all
+                // files and directories selected.
+                NSArray* files = [oPanel filenames];
+
+                NSString* fileName = [files objectAtIndex:0];
+                NSLog(fileName);
+		[mExportDirectory setStringValue:fileName];
+        }
+
 }
 
 #pragma mark -
@@ -119,6 +139,16 @@
 		[mAddKeyword setState:NSOnState];
 	else
 		[mAddKeyword setState:NSOffState];
+}
+
+-(NSString*)exportDirectory;
+{
+	return [mExportDirectory stringValue];
+}
+
+-(void)setExportDirectory:(NSString*)directory;
+{
+	[mExportDirectory setStringValue:directory];
 }
 
 @end

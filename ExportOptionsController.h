@@ -36,5 +36,8 @@
 -(BOOL)AddKeyword;
 -(void)setAddKeyword:(BOOL)state;
 
+-(NSString*)exportDirectory;
+-(void)setExportDirectory:(NSString*)directory;
+
 @end
 
