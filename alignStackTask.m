@@ -12,6 +12,7 @@
     //NSLog(@"%s",__PRETTY_FUNCTION__);
     //lock = [[NSConditionLock alloc] initWithCondition:0];
 	progress = nil;
+	mProgressInfo  = [[TaskProgressInfo alloc ] init];
 	cancel =NO;
 	args = [[NSMutableArray array] retain];
 	align_path = [[NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] resourcePath],
@@ -37,6 +38,7 @@
   [args release];
   [align_path release];
   [alignTask release];
+  [mProgressInfo release];
   [super dealloc];
 }
 
@@ -107,6 +109,7 @@
 		   alignTask=[[TaskWrapper alloc] initWithController:self arguments:args];
 		   int status = [alignTask startProcess];
 		   if (status == 0) {		
+				state = 0;
 				[alignTask waitUntilExit];
 		   }	   
 	   }
@@ -114,9 +117,61 @@
 	[NSThread exit];
 }
 
+// run on main thread (UI)
+- (void) updateProgressBar
+{
+    //[progressIndicator setDoubleValue: [aNumber doubleValue]]];
+    [progress incrementBy:1.0];
+        //NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
+	//NSLog(@"%s text is : %@",__PRETTY_FUNCTION__,[mProgressInfo displayText]);
+}
+
 - (void)appendOutput:(NSString *)output;
 {
-	NSLog(@"%s output is : [%@]",__PRETTY_FUNCTION__,output);
+	//NSLog(@"%s output is : [%@]",__PRETTY_FUNCTION__,output);
+	if ([output rangeOfString:@"loading"].location != NSNotFound) {
+		if (state != 1) {
+		//	NSLog(@"load");
+		//[mProgressInfo setDisplayText:@"align load"];
+		    [self performSelectorOnMainThread: @selector(updateProgressBar)
+			withObject:nil waitUntilDone:NO];
+			state = 1;
+		}
+	} else
+	if ([output rangeOfString:@"saving"].location != NSNotFound)  {
+		if (state != 2) {
+		//	NSLog(@"save");
+		//[mProgressInfo setDisplayText:@"align saving"];
+		    [self performSelectorOnMainThread: @selector(updateProgressBar)
+			withObject:nil waitUntilDone:NO];
+			state = 2;
+		}
+	} else
+	if ([output rangeOfString:@"remapping"].location != NSNotFound) {
+		if (state != 3) {
+		//	NSLog(@"remap");
+		//[mProgressInfo setDisplayText:@"align remapping"];
+		    [self performSelectorOnMainThread: @selector(updateProgressBar)
+			withObject:nil waitUntilDone:NO];
+			state = 3;
+		}
+	}  else
+	if (([output rangeOfString:@"Optimizing"].location != NSNotFound)|| 
+	   ([output rangeOfString:@"Strategy"].location != NSNotFound) ) {
+		if (state != 4) {
+		//	NSLog(@"optim");
+		//[mProgressInfo setDisplayText:@"align optimizing"];
+		    [self performSelectorOnMainThread: @selector(updateProgressBar)
+			withObject:nil waitUntilDone:NO];
+			state = 4;
+		}
+	}  else
+	if ([output rangeOfString:@"Remapping:"].location != NSNotFound) {
+	   //NSLog(@"%s (last state %d) output is : [%@]",__PRETTY_FUNCTION__,state,output);
+	    [self performSelectorOnMainThread: @selector(updateProgressBar)
+                withObject:nil waitUntilDone:NO];
+
+	}
 }
 
  

@@ -3,6 +3,7 @@
  */
 #import <Cocoa/Cocoa.h>
 #import "TaskWrapper.h"
+#import "TaskProgressInfo.h"
 
 @interface alignStackTask : NSObject  <TaskWrapperController>
 {
@@ -10,6 +11,7 @@
    
   @private
   NSProgressIndicator* progress;
+  TaskProgressInfo* mProgressInfo;
   
   BOOL findRunning;
   TaskWrapper *alignTask;
@@ -19,6 +21,8 @@
   
   NSString *align_path;
   BOOL cancel;
+
+  int state;
 }
 
 -(id)initWithPath:(NSString*)tmp_path;

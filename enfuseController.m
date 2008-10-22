@@ -443,9 +443,9 @@
 				}
 				
 				[mProgressIndicator setUsesThreadedAnimation:YES];
-				[mProgressIndicator setIndeterminate:YES];
+				//[mProgressIndicator setIndeterminate:YES];
 				[mProgressIndicator setDoubleValue:0.0];
-				[mProgressIndicator setMaxValue:(1+4*[images count])];
+				[mProgressIndicator setMaxValue:(1+23*[images count])]; // TOTO : add enfuse step ?
 				[mProgressIndicator startAnimation:self];
 				[aligntask setDelegate:self];
 				[aligntask setProgress:mProgressIndicator]; // needed ?
@@ -1240,7 +1240,7 @@ http://caffeinatedcocoa.com/blog/?p=7
 // 
 -(NSString*)previewfilename:(NSString *)file
 {
-      NSString *tempFilename = NSTemporaryDirectory();
+      NSString *tempFilename = [self temppath]; // NSTemporaryDirectory();
     
       return [[NSString stringWithFormat:@"%@/thumb_%@",tempFilename,file] retain];
 }
