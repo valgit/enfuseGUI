@@ -831,12 +831,18 @@
 {
     // add the string (a chunk of the results from locate) to the NSTextView's
     // backing store, in the form of an attributed string
-    NSLog(@"%d output is : [%@]",value, output);
+    if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
+	[output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
 	[mProgressIndicator incrementBy:1.0];
-#ifndef GNUSTEP
-	[myBadge badgeApplicationDockIconWithProgress:((360*value)/(1+4*[images count])) insetX:2 y:3];
 	value+=1;
+	//NSLog(@"%d output is : [%@]",value, output);
+	#ifndef GNUSTEP
+	[myBadge badgeApplicationDockIconWithProgress:((value)/(2+4*[images count])) insetX:2 y:3];
 #endif
+    } /* else {
+	NSLog(@"%d output is : [%@]",value, output);
+    } */
+
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
     //                         initWithString: output] autorelease]];
     // setup a selector to be called the next time through the event loop to scroll

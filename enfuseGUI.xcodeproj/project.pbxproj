@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A758F920EB10643004D6FE0 /* TaskProgressInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A758F910EB10643004D6FE0 /* TaskProgressInfo.m */; };
+		1A758FBA0EB10818004D6FE0 /* NSImage+GTImageConversion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A758FB90EB10818004D6FE0 /* NSImage+GTImageConversion.m */; };
 		713D55AD0EAE065D00546CEC /* exportOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 713D55AC0EAE065D00546CEC /* exportOptions.m */; };
 		7140F7490E8A551E00A56BB7 /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7460E8A551E00A56BB7 /* TaskWrapper.m */; };
 		7140F74A0E8A551E00A56BB7 /* enfuseController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7470E8A551E00A56BB7 /* enfuseController.m */; };
@@ -32,6 +34,12 @@
 		089C165DFE840E0CC02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
+		1A758F900EB10643004D6FE0 /* TaskProgressInfo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = TaskProgressInfo.h; sourceTree = "<group>"; };
+		1A758F910EB10643004D6FE0 /* TaskProgressInfo.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = TaskProgressInfo.m; sourceTree = "<group>"; };
+		1A758F940EB1066C004D6FE0 /* enfuse */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = enfuse; sourceTree = "<group>"; };
+		1A758F960EB106C7004D6FE0 /* align_image_stack */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = align_image_stack; sourceTree = "<group>"; };
+		1A758FB80EB10818004D6FE0 /* NSImage+GTImageConversion.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = "NSImage+GTImageConversion.h"; sourceTree = "<group>"; };
+		1A758FB90EB10818004D6FE0 /* NSImage+GTImageConversion.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = "NSImage+GTImageConversion.m"; sourceTree = "<group>"; };
 		29B97316FDCFA39411CA2CEA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		29B97319FDCFA39411CA2CEA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/MainMenu.nib; sourceTree = "<group>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
@@ -98,6 +106,10 @@
 				71F501570EADF04100CB129D /* ExportOptionsController.m */,
 				713D55AB0EAE065D00546CEC /* exportOptions.h */,
 				713D55AC0EAE065D00546CEC /* exportOptions.m */,
+				1A758F900EB10643004D6FE0 /* TaskProgressInfo.h */,
+				1A758F910EB10643004D6FE0 /* TaskProgressInfo.m */,
+				1A758FB80EB10818004D6FE0 /* NSImage+GTImageConversion.h */,
+				1A758FB90EB10818004D6FE0 /* NSImage+GTImageConversion.m */,
 			);
 			name = Classes;
 			sourceTree = "<group>";
@@ -123,6 +135,8 @@
 		19C28FACFE9D520D11CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				1A758F960EB106C7004D6FE0 /* align_image_stack */,
+				1A758F940EB1066C004D6FE0 /* enfuse */,
 				8D1107320486CEB800E47090 /* enfuseGUI.app */,
 			);
 			name = Products;
@@ -251,6 +265,8 @@
 				71F3D5E70EADBF6F007EFED9 /* enfuseTask.m in Sources */,
 				71F501580EADF04100CB129D /* ExportOptionsController.m in Sources */,
 				713D55AD0EAE065D00546CEC /* exportOptions.m in Sources */,
+				1A758F920EB10643004D6FE0 /* TaskProgressInfo.m in Sources */,
+				1A758FBA0EB10818004D6FE0 /* NSImage+GTImageConversion.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
