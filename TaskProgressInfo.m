@@ -3,15 +3,6 @@
  */
 #import "TaskProgressInfo.h"
 
-@interface TaskProgressInfo (Private)
-
-- (void)setDisplayText:(NSString*)text;
-- (BOOL)continueOperation;
-- (void)setProgressValue:(NSNumber *)value;
-- (void)setTaskStatus:(NSError *)status;
-
-@end
-
 @implementation TaskProgressInfo
 
 -  (NSString*)displayText;
@@ -41,10 +32,6 @@
     [displayText release];    
     [super dealloc];
 }
-
-@end
-
-@implementation TaskProgressInfo (Private)
 
 - (void)setDisplayText:(NSString*)text;
 {

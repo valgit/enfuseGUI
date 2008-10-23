@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "TaskWrapper.h"
+#import "TaskProgressInfo.h"
 
 @interface enfuseTask : NSObject <TaskWrapperController>
 {
@@ -15,6 +16,7 @@
    
   @private
   NSProgressIndicator* progress;
+  TaskProgressInfo* mProgressInfo;
   
   BOOL findRunning;
   TaskWrapper *enfusingTask;
@@ -36,8 +38,8 @@
 
 - (void)setProgress:(NSProgressIndicator *)mProgressIndicator;
 -(void)runEnfuse;
--(void)setCancel;
-- (BOOL)isCancel;
+- (void)setCancel:(BOOL)state;
+- (BOOL)cancel;
 
 //
 // - (BOOL)movie:(QTMovie *)movie shouldContinueOperation:(NSString *)op withPhase:(QTMovieOperationPhase)phase atPercent:(NSNumber *)percent 

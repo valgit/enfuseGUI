@@ -76,13 +76,18 @@
 	progress = mProgressIndicator;
 }
 
--(void)setCancel;
+-(void)setCancel:(BOOL)nstate;
 {
-	cancel = YES;
-	[alignTask cancelProcess];
+	if (nstate == YES) {
+		[alignTask cancelProcess];
+	} 
+	if ( nstate != cancel) {
+		cancel = nstate;
+	}
+
 }
 
-- (BOOL)isCancel;
+- (BOOL)cancel;
 {
 	return cancel;
 }
@@ -106,6 +111,8 @@
 		   if (alignTask!=nil)
 			   [alignTask release];
 			   
+		   [mProgressInfo setProgressValue:[NSNumber numberWithInt:0]];
+		   [mProgressInfo setDisplayText:@""];
 		   alignTask=[[TaskWrapper alloc] initWithController:self arguments:args];
 		   int status = [alignTask startProcess];
 		   if (status == 0) {		
@@ -117,61 +124,61 @@
 	[NSThread exit];
 }
 
-// run on main thread (UI)
-- (void) updateProgressBar
-{
-    //[progressIndicator setDoubleValue: [aNumber doubleValue]]];
-    [progress incrementBy:1.0];
-        //NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
-	//NSLog(@"%s text is : %@",__PRETTY_FUNCTION__,[mProgressInfo displayText]);
-}
-
 - (void)appendOutput:(NSString *)output;
 {
 	//NSLog(@"%s output is : [%@]",__PRETTY_FUNCTION__,output);
+	//[mProgressInfo setDisplayText:@""];
 	if ([output rangeOfString:@"loading"].location != NSNotFound) {
 		if (state != 1) {
 		//	NSLog(@"load");
-		//[mProgressInfo setDisplayText:@"align load"];
-		    [self performSelectorOnMainThread: @selector(updateProgressBar)
-			withObject:nil waitUntilDone:NO];
+		[mProgressInfo setDisplayText:@"Align load"];
+		[mProgressInfo setProgressValue:[NSNumber numberWithInt:
+			([[mProgressInfo progressValue] intValue]+1)]];
 			state = 1;
 		}
 	} else
 	if ([output rangeOfString:@"saving"].location != NSNotFound)  {
 		if (state != 2) {
 		//	NSLog(@"save");
-		//[mProgressInfo setDisplayText:@"align saving"];
-		    [self performSelectorOnMainThread: @selector(updateProgressBar)
-			withObject:nil waitUntilDone:NO];
+		[mProgressInfo setDisplayText:@"Align saving"];
 			state = 2;
+		[mProgressInfo setProgressValue:[NSNumber numberWithInt:
+			([[mProgressInfo progressValue] intValue]+1)]];
 		}
 	} else
 	if ([output rangeOfString:@"remapping"].location != NSNotFound) {
 		if (state != 3) {
 		//	NSLog(@"remap");
-		//[mProgressInfo setDisplayText:@"align remapping"];
-		    [self performSelectorOnMainThread: @selector(updateProgressBar)
-			withObject:nil waitUntilDone:NO];
+		[mProgressInfo setDisplayText:@"Align remapping"];
 			state = 3;
+		[mProgressInfo setProgressValue:[NSNumber numberWithInt:
+			([[mProgressInfo progressValue] intValue]+1)]];
 		}
 	}  else
 	if (([output rangeOfString:@"Optimizing"].location != NSNotFound)|| 
 	   ([output rangeOfString:@"Strategy"].location != NSNotFound) ) {
 		if (state != 4) {
 		//	NSLog(@"optim");
-		//[mProgressInfo setDisplayText:@"align optimizing"];
-		    [self performSelectorOnMainThread: @selector(updateProgressBar)
-			withObject:nil waitUntilDone:NO];
+		[mProgressInfo setDisplayText:@"Align optimizing"];
+		[mProgressInfo setProgressValue:[NSNumber numberWithInt:
+			([[mProgressInfo progressValue] intValue]+1)]];
 			state = 4;
 		}
 	}  else
 	if ([output rangeOfString:@"Remapping:"].location != NSNotFound) {
 	   //NSLog(@"%s (last state %d) output is : [%@]",__PRETTY_FUNCTION__,state,output);
-	    [self performSelectorOnMainThread: @selector(updateProgressBar)
-                withObject:nil waitUntilDone:NO];
-
+		[mProgressInfo setProgressValue:[NSNumber numberWithInt:
+			([[mProgressInfo progressValue] intValue]+1)]];
 	}
+
+	// call on main thread ...
+	if (_delegate && [_delegate respondsToSelector:@selector(shouldContinueOperationWithProgressInfo:)])
+		[_delegate performSelectorOnMainThread: @selector(shouldContinueOperationWithProgressInfo:)
+                withObject:mProgressInfo waitUntilDone:YES];
+
+	// check if we should continue !
+	if ([mProgressInfo continueOperation] == NO)
+		[self setCancel:YES];
 }
 
  

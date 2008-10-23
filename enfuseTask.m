@@ -16,6 +16,7 @@
 		//NSLog(@"%s",__PRETTY_FUNCTION__);
 		//lock = [[NSConditionLock alloc] initWithCondition:0];
 		progress = nil;
+		mProgressInfo  = [[TaskProgressInfo alloc ] init];
 		cancel =NO;
 		enfusingTask = nil;
 		args = [[NSMutableArray array] retain];
@@ -43,6 +44,8 @@
 	//[lock release];
 	[args release];
 	[enfuse_path release];
+	[mProgressInfo release];
+
 	if (enfusingTask != nil)
 		[enfusingTask release];
 	[super dealloc];
@@ -91,13 +94,16 @@
 	progress = mProgressIndicator;
 }
 
--(void)setCancel;
-{
-	cancel = YES;
-	[enfusingTask cancelProcess];
+-(void)setCancel:(BOOL)state;
+{  
+	if (state == YES) {
+		[enfusingTask cancelProcess];
+        }
+	if (state != cancel)
+		cancel = state;
 }
 
-- (BOOL)isCancel;
+- (BOOL)cancel;
 {
 	return cancel;
 }
@@ -123,6 +129,9 @@
 		   
 		   enfusingTask=[[TaskWrapper alloc] initWithController:self arguments:args];
 		   int status = [enfusingTask startProcess];
+		   [mProgressInfo setProgressValue:[NSNumber numberWithInt:0]];
+                   [mProgressInfo setDisplayText:NSLocalizedString(@"Enfusing...",@"")];
+
 		   if (status == 0) {		
 			   [enfusingTask waitUntilExit];
 		   } else {
@@ -147,14 +156,24 @@
 	if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
         [output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
         // UI should be on main thread !
-        [self performSelectorOnMainThread: @selector(updateProgressBar)
-                withObject:nil waitUntilDone:NO];
+        //[self performSelectorOnMainThread: @selector(updateProgressBar)
+         //       withObject:nil waitUntilDone:NO];
         //[mProgessIndicator incrementBy:1.0];
+	[mProgressInfo setProgressValue:[NSNumber numberWithInt:
+                ([[mProgressInfo progressValue] intValue]+1)]];
         //NSLog(@"%d output is : [%@]",value, output);
     } /* else {
         NSLog(@"%d output is : [%@]",value, output);
     } */
 
+   // call on main thread ...
+   if (_delegate && [_delegate respondsToSelector:@selector(shouldContinueOperationWithProgressInfo:)])
+                [_delegate performSelectorOnMainThread: @selector(shouldContinueOperationWithProgressInfo:)
+                withObject:mProgressInfo waitUntilDone:YES];
+
+    // check if we should continue !
+    if ([mProgressInfo continueOperation] == NO)
+                [self setCancel:YES];
 }
 
 

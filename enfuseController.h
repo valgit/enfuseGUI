@@ -2,14 +2,13 @@
 
 #import <Cocoa/Cocoa.h>
 #import "CTProgressBadge.h"
-#import "TaskWrapper.h"
 #import "MyPrefsWindowController.h"
 #import "alignStackTask.h"
 #import "enfuseTask.h"
 #import "ExportOptionsController.h"
 #import "exportOptions.h"
 
-@interface enfuseController : NSObject <TaskWrapperController>
+@interface enfuseController : NSObject 
 {
   IBOutlet NSWindow *window;
   IBOutlet NSSlider* mContrastSlider;
@@ -66,6 +65,7 @@
   IBOutlet NSButton* mCopyFocal;
 
   IBOutlet NSProgressIndicator *mProgressIndicator;
+  IBOutlet NSTextField *mProgressText;
   CTProgressBadge *myBadge;
 
   IBOutlet ExportOptionsController* exportOptionsSheetController;

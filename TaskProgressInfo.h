@@ -14,8 +14,15 @@
 }
 
 -  (NSString*)displayText;
+- (void)setDisplayText:(NSString*)text;
+
 - (NSNumber *)progressValue;
+- (void)setProgressValue:(NSNumber *)value;
+
 - (NSError *)taskStatus;
+- (void)setTaskStatus:(NSError *)status;
+
+- (BOOL)continueOperation;
 - (void)setContinueOperation:(BOOL)value;
 
 @end

@@ -25,16 +25,17 @@
   int state;
 }
 
--(id)initWithPath:(NSString*)tmp_path;
--(void)dealloc;
+- (id)initWithPath:(NSString*)tmp_path;
+- (void)dealloc;
 
 - (id)delegate;
 - (void)setDelegate:(id)new_delegate;
 
 - (void)setProgress:(NSProgressIndicator *)mProgressIndicator;
--(void)runAlign;
--(void)setCancel;
-- (BOOL)isCancel;
+- (void)runAlign;
+
+- (void)setCancel:(BOOL)state;
+- (BOOL)cancel;
 
 //
 // - (BOOL)movie:(QTMovie *)movie shouldContinueOperation:(NSString *)op withPhase:(QTMovieOperationPhase)phase atPercent:(NSNumber *)percent 

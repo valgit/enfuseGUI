@@ -8,6 +8,7 @@
 #endif
 #import "enfuseController.h"
 #import "NSFileManager-Extensions.h"
+#import "TaskProgressInfo.h"
 
 #include <math.h>
 
@@ -388,6 +389,7 @@
 - (IBAction)cancel:(id)sender
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+#if 0
 	if (findRunning) {
 		//[enfuseTask stopProcess];
 		// Release the memory for this wrapper object
@@ -395,16 +397,17 @@
 		//enfuseTask=nil;
                 //[enfuseTask cancelProcess];
 		[mEnfuseButton setEnabled:YES];
+		findRunning = NO;
 	}
 	if (enfusetask != nil) {
 		NSLog(@"%s should cancel enfuse task !",__PRETTY_FUNCTION__);
-		[enfusetask setCancel];
+		[enfusetask setCancel:YES];
 	}
 	if (aligntask != nil) {
 		NSLog(@"%s should cancel aligning task !",__PRETTY_FUNCTION__);
-		[aligntask setCancel];
+		[aligntask setCancel:YES];
 	}
-	
+#endif	
 }
 
 - (IBAction)enfuse:(id)sender
@@ -412,14 +415,16 @@
 	NSLog(@"%s",__PRETTY_FUNCTION__);
 	
 	   if (findRunning) {
-		   NSLog(@"already running");
+		   NSLog(@"already running, canceling");
 		   // This stops the task and calls our callback (-processFinished)
 		   //[enfuseTask stopProcess];
 		   // Release the memory for this wrapper object
 		   //[enfuseTask release];
 		   //enfuseTask=nil;
+		   findRunning = NO;
 		   return;
 	   } else {					   
+		findRunning = YES;
 			if (aligntask != nil) {
 				NSLog(@"%s need to cleanup autoalign ?",__PRETTY_FUNCTION__);
 				[aligntask release];
@@ -447,6 +452,7 @@
 				[mProgressIndicator setDoubleValue:0.0];
 				[mProgressIndicator setMaxValue:(1+23*[images count])]; // TOTO : add enfuse step ?
 				[mProgressIndicator startAnimation:self];
+				[mProgressText setStringValue:@"Aligning..."];
 				[aligntask setDelegate:self];
 				[aligntask setProgress:mProgressIndicator]; // needed ?
 				[NSThread detachNewThreadSelector:@selector(runAlign)
@@ -455,7 +461,8 @@
 				//[mProgressIndicator stopAnimation:self];
 				//[mProgressIndicator setIndeterminate:NO];
 				// for now !
-				[mEnfuseButton setEnabled:NO];
+				//[mEnfuseButton setEnabled:NO];
+				[mEnfuseButton setTitle:@"Cancel"];
 				return; // testing !
 		   } else {
 				NSLog(@"%s need to enfuse",__PRETTY_FUNCTION__);
@@ -561,7 +568,8 @@
 										 toTarget:enfusetask
 									   withObject:nil];
 				
-	[mEnfuseButton setEnabled:NO];
+	//[mEnfuseButton setEnabled:NO];
+	[mEnfuseButton setTitle:@"Cancel"];
 	return; // testing !				
 }
 
@@ -897,21 +905,34 @@
 }
 
 #pragma mark -
+- (BOOL)shouldContinueOperationWithProgressInfo:(TaskProgressInfo*)inProgressInfo;
+{
+        //NSLog(@"%s thread is : %@",__PRETTY_FUNCTION__,[NSThread currentThread]);
+        //NSLog(@"%s text is : %@",__PRETTY_FUNCTION__,[inProgressInfo displayText]);
+	[mProgressText setStringValue:[inProgressInfo displayText]];
+	[mProgressIndicator setDoubleValue:[[inProgressInfo progressValue] doubleValue]];
+
+	// TODO : should check !
+	[inProgressInfo setContinueOperation:findRunning];
+	return findRunning;
+}
 
 //
 // delegate for align_task thread
 -(void)alignFinish:(int)status;
 {
 	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
+        [mProgressIndicator setDoubleValue:0];
 	[mProgressIndicator stopAnimation:self];
-	[mProgressIndicator setIndeterminate:NO];
-	int canceled = [aligntask isCancel];
+	[mProgressText setStringValue:@""];
+	int canceled = [aligntask cancel];
 	//[aligntask release];
 	//aligntask = nil;
 	if (status == 0 && canceled != YES) {
 		[self doEnfuse];
 	} else {
-		 [mEnfuseButton setEnabled:YES];
+		[mEnfuseButton setTitle:@"Enfuse"];
+		// [mEnfuseButton setEnabled:YES];
 	}
 }
 
@@ -921,16 +942,19 @@
 {
 	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
 	[mProgressIndicator stopAnimation:self];
-    [mProgressIndicator setDoubleValue:0];
+        [mProgressIndicator setDoubleValue:0];
+	[mProgressText setStringValue:@""];
 	
     findRunning=NO;
     // change the button's title back for the next search
     //[mEnfuseButton setTitle:@"Enfuse"];
-    [mEnfuseButton setEnabled:YES];
-	int canceled = [enfusetask isCancel];
+    //[mEnfuseButton setEnabled:YES];
+	int canceled = [enfusetask cancel];
 	if (status  == 0 && canceled != YES) {
 		if([mCopyMeta state]==NSOnState)  {
-			[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[enfusetask outputfile]];
+			[mProgressText setStringValue:@"Copying Exif values..."];
+			[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] 
+				to:[self outputfile] with:[enfusetask outputfile]];
 		} else {
 			NSFileManager *fm = [NSFileManager defaultManager];
 			if ([fm fileExistsAtPath:([enfusetask outputfile])]){
@@ -948,7 +972,9 @@
 		
 		[self openFile:[self outputfile]];
 	}
-	[mEnfuseButton setEnabled:YES];
+	[mProgressText setStringValue:@""];
+        [mEnfuseButton setTitle:@"Enfuse"];
+	//[mEnfuseButton setEnabled:YES];
 }
 
 #pragma mark -
