@@ -25,6 +25,8 @@
 
 -(NSString *)initTempDirectory;
 
+- (void) checkBeta;
+
 @end
 
 @implementation enfuseController
@@ -50,23 +52,30 @@
 // control of the UI.
 -(void)awakeFromNib
 {
+    [self checkBeta];
+	
     findRunning=NO;
     //enfuseTask=nil;
-#if 0
-	NSString *path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] bundlePath],
-		/*@"/greycstoration.app/Contents/MacOS/greycstoration"*/
-		@"/enfuse/enfuse"];
+#if 1
+	NSString *path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] resourcePath],
+		@"/align_image_stack"];
 	
 	// check for enfuse binaries...
 	if([[NSFileManager defaultManager] isExecutableFileAtPath:path]==NO){
 		NSString *alert = [path stringByAppendingString: @" is not executable!"];
 		NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
 		[NSApp terminate:nil];
-#if 0
-        [NSException raise:NSGenericException
-					format:@"bad_find_binary:_%@", path];
-#endif
 	}
+	
+	path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] resourcePath],
+		@"/enfuse"];
+	
+	// check for enfuse binaries...
+	if([[NSFileManager defaultManager] isExecutableFileAtPath:path]==NO){
+		NSString *alert = [path stringByAppendingString: @" is not executable!"];
+		NSRunAlertPanel (NULL, alert, @"OK", NULL, NULL);
+		[NSApp terminate:nil];
+	}		
 #endif
 	
 	[window center];
@@ -1230,7 +1239,7 @@
 - (IBAction)openPreferences:(id)sender
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
-#if 0
+#if 1
 	[[MyPrefsWindowController sharedPrefsWindowController] showWindow:nil];
 	(void)sender;
 #else
@@ -1521,6 +1530,34 @@ http://caffeinatedcocoa.com/blog/?p=7
                         [fileManager createDirectoryAtPath:tempDirectoryPath attributes:nil];
                 }
 		return tempDirectoryPath;
+}
+
+//
+// check if this beta version has expired !
+- (void) checkBeta;
+{
+	NSDate *expirationDate = 
+	[[NSDate dateWithNaturalLanguageString:
+		[NSString stringWithCString:__DATE__]] 
+            addTimeInterval:(60*60*24*30/*30 days*/)];
+	
+    if( [expirationDate earlierDate:[NSDate date]] 
+		== expirationDate )
+    {
+        int result = NSRunAlertPanel(@"Beta Expired", 
+									 @"This beta has expired, please visit "
+									 "http://vald70.free.fr/ to grab"
+									 "the latest version.", 
+									 @"Take Me There", @"Exit", nil);
+		
+        if( result == NSAlertDefaultReturn )
+        {
+            [[NSWorkspace sharedWorkspace] openURL:
+				[NSURL URLWithString:
+							  @"http://vald70.free.fr/"]];
+        }
+        [[NSApplication sharedApplication] terminate:self];
+    }
 }
 
 @end

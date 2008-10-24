@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1A758F920EB10643004D6FE0 /* TaskProgressInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A758F910EB10643004D6FE0 /* TaskProgressInfo.m */; };
 		1A758FBA0EB10818004D6FE0 /* NSImage+GTImageConversion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A758FB90EB10818004D6FE0 /* NSImage+GTImageConversion.m */; };
-		713D55AD0EAE065D00546CEC /* exportOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = 713D55AC0EAE065D00546CEC /* exportOptions.m */; };
 		7140F7490E8A551E00A56BB7 /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7460E8A551E00A56BB7 /* TaskWrapper.m */; };
 		7140F74A0E8A551E00A56BB7 /* enfuseController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7470E8A551E00A56BB7 /* enfuseController.m */; };
 		71955B680E8A9D4F008CC333 /* Remove.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 71955B660E8A9D4F008CC333 /* Remove.tiff */; };
@@ -45,8 +44,6 @@
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		32CA4F630368D1EE00C91783 /* enfuseGUI_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = enfuseGUI_Prefix.pch; sourceTree = "<group>"; };
-		713D55AB0EAE065D00546CEC /* exportOptions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = exportOptions.h; sourceTree = "<group>"; };
-		713D55AC0EAE065D00546CEC /* exportOptions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = exportOptions.m; sourceTree = "<group>"; };
 		7140F7450E8A551E00A56BB7 /* TaskWrapper.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = TaskWrapper.h; sourceTree = "<group>"; };
 		7140F7460E8A551E00A56BB7 /* TaskWrapper.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = TaskWrapper.m; sourceTree = "<group>"; };
 		7140F7470E8A551E00A56BB7 /* enfuseController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = enfuseController.m; sourceTree = "<group>"; };
@@ -104,8 +101,6 @@
 				71B7F84D0E8D005C00E0A1BF /* MyPrefsWindowController.m */,
 				71F501560EADF04100CB129D /* ExportOptionsController.h */,
 				71F501570EADF04100CB129D /* ExportOptionsController.m */,
-				713D55AB0EAE065D00546CEC /* exportOptions.h */,
-				713D55AC0EAE065D00546CEC /* exportOptions.m */,
 				1A758F900EB10643004D6FE0 /* TaskProgressInfo.h */,
 				1A758F910EB10643004D6FE0 /* TaskProgressInfo.m */,
 				1A758FB80EB10818004D6FE0 /* NSImage+GTImageConversion.h */,
@@ -264,7 +259,6 @@
 				71F3D5E60EADBF6F007EFED9 /* CTProgressBadge.m in Sources */,
 				71F3D5E70EADBF6F007EFED9 /* enfuseTask.m in Sources */,
 				71F501580EADF04100CB129D /* ExportOptionsController.m in Sources */,
-				713D55AD0EAE065D00546CEC /* exportOptions.m in Sources */,
 				1A758F920EB10643004D6FE0 /* TaskProgressInfo.m in Sources */,
 				1A758FBA0EB10818004D6FE0 /* NSImage+GTImageConversion.m in Sources */,
 			);
@@ -343,6 +337,10 @@
 		C01FCF4F08A954540054247B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
@@ -354,6 +352,10 @@
 		C01FCF5008A954540054247B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
