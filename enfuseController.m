@@ -99,7 +99,8 @@
 	
 	images = [[NSMutableArray alloc] init];
 	aligntask = nil;
-	options = [[exportOptions alloc] init];
+	//options = [[exportOptions alloc] init];
+	useroptions = [[NSMutableDictionary alloc] initWithCapacity:5];
 	
 	return self;
 }
@@ -117,8 +118,8 @@
 	if (exportOptionsSheetController != nil)
 		[exportOptionsSheetController release];
 		
-	if (options != nil)
-		[options dealloc];
+	if (useroptions != nil)
+		[useroptions dealloc];
 		
     [super dealloc];
 }
@@ -1202,6 +1203,7 @@
 - (IBAction)preferencesSaving:(id)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+#if 0
 	[options setAddKeyword:[exportOptionsSheetController AddKeyword]];
 	[options setImportInAperture:[exportOptionsSheetController ImportInAperture]];
 	[options setStackWithOriginal:[exportOptionsSheetController stackWithOriginal]];
@@ -1209,6 +1211,20 @@
 		[options setKeyword:[exportOptionsSheetController keyword]];
 	else 
 		[options setKeyword:nil];
+#else
+	NSMutableDictionary *options = [NSMutableDictionary dictionary];
+	[useroptions setValue:[NSNumber numberWithBool:[exportOptionsSheetController AddKeyword]]
+		forKey:@"addKeyword"];
+	[useroptions setValue:[NSNumber numberWithBool:[exportOptionsSheetController ImportInAperture]] 
+		forKey:@"importInAperture"];
+	[useroptions setValue:[NSNumber numberWithBool:[exportOptionsSheetController stackWithOriginal]]
+		forKey:@"stackWithOriginal"];
+	if ([exportOptionsSheetController AddKeyword])
+		[useroptions setObject:[exportOptionsSheetController keyword]
+			 forKey:@"keyword"];
+	else
+		[useroptions removeObjectForKey:@"keyword"];
+#endif
 }
 
 - (IBAction)openPreferences:(id)sender
@@ -1220,13 +1236,24 @@
 #else
 	if (exportOptionsSheetController == nil) 
 		exportOptionsSheetController = [[ExportOptionsController alloc] init ];
-
+#if 0
     [exportOptionsSheetController setImportInAperture:[options importInAperture]];
 	[exportOptionsSheetController setAddKeyword:[options addKeyword]];
 	[exportOptionsSheetController stackWithOriginal:[options stackWithOriginal]];
 	if ([options addKeyword])
 		[exportOptionsSheetController setKeyword:[options keyword]];
-		
+#else
+    [exportOptionsSheetController setImportInAperture:
+		[[useroptions valueForKey:@"importInAperture"] boolValue]];
+    [exportOptionsSheetController stackWithOriginal:
+		[[useroptions valueForKey:@"stackWithOriginal"] boolValue]];
+    [exportOptionsSheetController setAddKeyword:
+		[[useroptions valueForKey:@"addKeyword"] boolValue]];
+    if ([[useroptions valueForKey:@"addKeyword"] boolValue])
+	[exportOptionsSheetController setKeyword:
+		[useroptions valueForKey:@"keyword"]];
+
+#endif		
 	[exportOptionsSheetController runSheet:window selector:@selector(preferencesSaving:) target:self];
 #endif
 }
@@ -1404,13 +1431,26 @@ http://caffeinatedcocoa.com/blog/?p=7
               [standardUserDefaults setObject:[mOutFile stringValue] forKey:@"outputFile"];
               [standardUserDefaults setObject:[mAppendTo stringValue] forKey:@"outputAppendTo"];
               [standardUserDefaults setObject:[mOutQuality stringValue] forKey:@"outputQuality"];
+	
+	  id obj = [useroptions valueForKey:@"importInAperture"];
+	  if (obj != nil)
+	  [standardUserDefaults setObject:obj
+					forKey:@"importInAperture"];
 
-			  [standardUserDefaults setObject:[NSNumber numberWithBool:[options importInAperture]] forKey:@"importInAperture"];
-			  [standardUserDefaults setObject:[NSNumber numberWithBool:[options stackWithOriginal]] forKey:@"stackWithOriginal"];
-			  [standardUserDefaults setObject:[NSNumber numberWithBool:[options addKeyword]] forKey:@"addKeyword"];
-			  if ([options addKeyword])
-				[standardUserDefaults setObject:[options keyword] forKey:@"keyword"];
-			  
+	  obj = [useroptions valueForKey:@"stackWithOriginal"];
+	  if (obj != nil)
+	  [standardUserDefaults setObject:obj
+					 forKey:@"stackWithOriginal"];
+
+	  obj = [useroptions valueForKey:@"addKeyword"];
+	  if (obj != nil) {
+		  [standardUserDefaults setObject:obj
+					 forKey:@"addKeyword"];
+		  if ([obj boolValue])
+			[standardUserDefaults setObject:[useroptions valueForKey:@"keyword"]
+					 forKey:@"keyword"];
+			 
+	   } 
               [standardUserDefaults synchronize];
         }
 }
@@ -1439,11 +1479,15 @@ http://caffeinatedcocoa.com/blog/?p=7
 			  if (temp != nil)
 				[mOutQuality setStringValue:temp];
 				
-			[options setImportInAperture:[standardUserDefaults boolForKey:@"importInAperture"]];
-			[options setStackWithOriginal:[standardUserDefaults boolForKey:@"stackWithOriginal"]];
-			[options setAddKeyword:[standardUserDefaults boolForKey:@"addKeyword"]];
-			if ([options addKeyword])
-				[options setKeyword:[standardUserDefaults objectForKey:@"keyword"]];
+			[useroptions setValue:[standardUserDefaults objectForKey:@"importInAperture"]
+				forKey:@"importInAperture"];
+			[useroptions setValue:[standardUserDefaults objectForKey:@"stackWithOriginal"]
+				forKey:@"stackWithOriginal"];
+			[useroptions setValue:[standardUserDefaults objectForKey:@"addKeyword"]
+				forKey:@"addKeyword"];
+			if ([[useroptions valueForKey:@"addKeyword"] boolValue])
+				[useroptions setValue:[standardUserDefaults objectForKey:@"keyword"]
+					forKey:@"keyword"];
         }
 }
 
