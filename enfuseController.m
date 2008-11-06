@@ -399,6 +399,9 @@
 - (IBAction)cancel:(id)sender
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+	[ NSApp stopModal ];
+	findRunning = NO;
+
 #if 0
 	if (findRunning) {
 		//[enfuseTask stopProcess];
@@ -472,6 +475,14 @@
 				//[mProgressIndicator setIndeterminate:NO];
 				// for now !
 				//[mEnfuseButton setEnabled:NO];
+	
+			    [ NSApp beginSheet: mProgressPanel 
+						modalForWindow: window modalDelegate: nil
+						didEndSelector: nil contextInfo: nil ];
+				[ NSApp runModalForWindow: mProgressPanel ];
+				[ NSApp endSheet: mProgressPanel ];
+				[ mProgressPanel orderOut: self ];
+	
 				[mEnfuseButton setTitle:@"Cancel"];
 				return; // testing !
 		   } else {

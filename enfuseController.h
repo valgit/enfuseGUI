@@ -63,6 +63,7 @@
   IBOutlet NSButton* mCopyShutter;
   IBOutlet NSButton* mCopyFocal;
 
+  IBOutlet NSPanel *mProgressPanel;
   IBOutlet NSProgressIndicator *mProgressIndicator;
   IBOutlet NSTextField *mProgressText;
   CTProgressBadge *myBadge;

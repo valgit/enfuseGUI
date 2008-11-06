@@ -54,6 +54,7 @@
                 mOutputQualitySlider = NSSlider; 
                 mOutputType = NSMatrix; 
                 mProgressIndicator = NSProgressIndicator; 
+                mProgressPanel = NSPanel; 
                 mProgressText = NSTextField; 
                 mResetButton = NSButton; 
                 mSaturationSlider = NSSlider; 

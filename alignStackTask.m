@@ -26,7 +26,7 @@
 	
 	NSLog(@"%s will run with : << %@ >>",
 		__PRETTY_FUNCTION__, args);
-
+    filename = nil;
   }
   return self;
 }
