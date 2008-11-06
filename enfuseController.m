@@ -476,6 +476,7 @@
 				// for now !
 				//[mEnfuseButton setEnabled:NO];
 	
+				// show the progress sheet
 			    [ NSApp beginSheet: mProgressPanel 
 						modalForWindow: window modalDelegate: nil
 						didEndSelector: nil contextInfo: nil ];
@@ -590,6 +591,15 @@
 									   withObject:nil];
 				
 	//[mEnfuseButton setEnabled:NO];
+	
+	// show the progress sheet
+	[ NSApp beginSheet: mProgressPanel 
+		modalForWindow: window modalDelegate: nil
+		didEndSelector: nil contextInfo: nil ];
+				[ NSApp runModalForWindow: mProgressPanel ];
+				[ NSApp endSheet: mProgressPanel ];
+				[ mProgressPanel orderOut: self ];
+				
 	[mEnfuseButton setTitle:@"Cancel"];
 	return; // testing !				
 }
@@ -955,6 +965,7 @@
 	int canceled = [aligntask cancel];
 	//[aligntask release];
 	//aligntask = nil;
+	[ NSApp stopModal ];
 	if (status == 0 && canceled != YES) {
 		[self doEnfuse];
 	} else {
@@ -977,6 +988,7 @@
     //[mEnfuseButton setTitle:@"Enfuse"];
     //[mEnfuseButton setEnabled:YES];
 	int canceled = [enfusetask cancel];
+	[ NSApp stopModal ];
 	if (status  == 0 && canceled != YES) {
 		if([mCopyMeta state]==NSOnState)  {
 			[mProgressText setStringValue:@"Copying Exif values..."];
@@ -1369,12 +1381,23 @@ http://caffeinatedcocoa.com/blog/?p=7
 	CGImageSourceRef source = CGImageSourceCreateWithURL((CFURLRef)_tmpurl, NULL);
 	if(source != nil) {
 		// get Exif from source?
-		NSDictionary* properties = (NSDictionary *)CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
+		NSDictionary* metadata = (NSDictionary *)CGImageSourceCopyPropertiesAtIndex(exifsrc, 0, NULL);
+		//make the metadata dictionary mutable so we can add properties to it
+		NSMutableDictionary *metadataAsMutable = [[metadata mutableCopy]autorelease];
+		[metadata release];
+	
 		//NSLog(@"props: %@", [(NSDictionary *)properties description]);
-		NSDictionary *exif = (NSDictionary *)[properties objectForKey:(NSString *)kCGImagePropertyExifDictionary];
-		if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
+		 NSMutableDictionary *newExif = [[[metadata objectForKey:(NSString *)kCGImagePropertyExifDictionary]mutableCopy]autorelease];
+    
+		if(!newExif) {
+			//if the image does not have an EXIF dictionary (not all images do), then create one for us to use
+			newExif = [NSMutableDictionary dictionary];
+		}
+	
+		//NSDictionary *exif = (NSDictionary *)[properties objectForKey:(NSString *)kCGImagePropertyExifDictionary];
+		if(newExif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
 			//NSLog(@"the exif data is: %@", [exif description]);
-			newExif = [NSMutableDictionary dictionaryWithDictionary:exif];
+			//newExif = [NSMutableDictionary dictionaryWithDictionary:exif];
 
 			if ([mCopyShutter state]==NSOnState) {
 				NSLog(@"%s removing shutter speed",__PRETTY_FUNCTION__);
@@ -1390,6 +1413,9 @@ http://caffeinatedcocoa.com/blog/?p=7
 			}
 		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
 		
+		//add our modified EXIF data back into the image’s metadata
+		[metadataAsMutable setObject:newExif forKey:(NSString *)kCGImagePropertyExifDictionary];
+		
 		// create the destination
 		CGImageDestinationRef destination = CGImageDestinationCreateWithURL((CFURLRef)_outurl,
 				CGImageSourceGetType(source),
@@ -1397,7 +1423,6 @@ http://caffeinatedcocoa.com/blog/?p=7
 				NULL);
 	
 		//CGImageDestinationSetProperties(destination, (CFDictionaryRef)exif);	
-		
 
 		// copy data from temporary image ...
 		int imageCount = CGImageSourceGetCount(source);
@@ -1407,15 +1432,15 @@ http://caffeinatedcocoa.com/blog/?p=7
 				CGImageDestinationAddImageFromSource(destination,
 						     source,
 						     i,
-						     (CFDictionaryRef)newExif);
+						     (CFDictionaryRef)metadataAsMutable);
 		}
     
 		CGImageDestinationFinalize(destination);
     
 		CFRelease(destination);
 		CFRelease(source); 
-		CFRelease(properties);
-		CFRelease(exifsrc); 
+		//CFRelease(properties);
+		//CFRelease(exifsrc); 
 	} else {
 		NSRunInformationalAlertPanel(@"Copying Exif error!",
 									 @"Unable to add Exif to Image.",
