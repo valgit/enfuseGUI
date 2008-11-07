@@ -843,16 +843,73 @@
 	[mMuSlider setFloatValue:theValue];
 }
 
+- (void) openPresetsDidEnd:(NSOpenPanel *)panel
+             returnCode:(int)returnCode
+            contextInfo:(void  *)contextInfo
+{
+  NSLog(@"%s",__PRETTY_FUNCTION__);
+
+  //Did they choose open?
+  if(returnCode == NSOKButton) {
+	NSData* data = [NSData dataWithContentsOfFile:[panel filename]];
+	[self readFromData:data ofType:@"xml"];
+	[data release];
+  }
+}
+
 - (IBAction) openPresets: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
+	NSOpenPanel *panel = [NSOpenPanel openPanel];
+
+	  [panel setCanChooseDirectories:NO];
+	  [panel setCanChooseFiles:YES];
+	  [panel setCanCreateDirectories:NO];
+	  [panel setAllowsMultipleSelection:NO];
+	  [panel setAlphaValue:0.95];
+	  [panel setTitle:@"Select preset"];
+
+	  [panel beginSheetForDirectory: nil
+		 file:nil
+		 types:nil
+		 modalForWindow: window // [self window ]
+		 modalDelegate:self
+		 didEndSelector:
+		   @selector(openPresetsDidEnd::returnCode:contextInfo:)
+		 contextInfo:nil];
+}
+
+- (void) savePresetsDidEnd:(NSSavePanel *)panel
+             returnCode:(int)returnCode
+            contextInfo:(void  *)contextInfo
+{
+  NSLog(@"%s",__PRETTY_FUNCTION__);
+
+  //Did they choose open?
+  if(returnCode == NSOKButton) {
+
+    NSData* data = [self dataOfType:@"xml"];
+    [data writeToFile:[panel filename] atomically:YES ];
+  }
 }
 
 - (IBAction) savePresets: (IBOutlet)sender;
 {
 	NSLog(@"%s",__PRETTY_FUNCTION__);
-	NSData* data = [self dataOfType:@"xml"];
-	[data writeToFile:@"/tmp/test.xml" atomically:YES ];
+	NSSavePanel *panel = [NSSavePanel savePanel];
+
+	  //[panel setCanCreateDirectories:YES];
+	  //[panel setAllowsMultipleSelection:NO];
+	  [panel setAlphaValue:0.95];
+	  [panel setTitle:@"Save preset"];
+
+	  [panel beginSheetForDirectory: nil
+		 file:@"default.preset" // default filename
+		 modalForWindow: window // [self window ]
+		 modalDelegate:self
+		 didEndSelector:
+		   @selector(savePresetsDidEnd::returnCode:contextInfo:)
+		 contextInfo:nil];
 }
 
 #pragma mark -
