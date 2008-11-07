@@ -20,6 +20,7 @@ Preferences.nib  \
 ExportOptions.nib \
 InfoPlist.strings 
 
+
 enfuseGUI_RESOURCE_FILES = \
 Info.plist\
 Remove.tiff\

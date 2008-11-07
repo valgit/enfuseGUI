@@ -263,6 +263,8 @@
 			}
 		}
 
+	// remove tempdir ...
+	[defaultManager removeFileAtPath:[self temppath] handler:self];
 	// [self saveSettings];
 	[self setDefaults];
 } 
