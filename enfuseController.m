@@ -875,7 +875,7 @@
 		 modalForWindow: window // [self window ]
 		 modalDelegate:self
 		 didEndSelector:
-		   @selector(openPresetsDidEnd::returnCode:contextInfo:)
+		   @selector(openPresetsDidEnd:returnCode:contextInfo:)
 		 contextInfo:nil];
 }
 
@@ -908,7 +908,7 @@
 		 modalForWindow: window // [self window ]
 		 modalDelegate:self
 		 didEndSelector:
-		   @selector(savePresetsDidEnd::returnCode:contextInfo:)
+		   @selector(savePresetsDidEnd:returnCode:contextInfo:)
 		 contextInfo:nil];
 }
 
