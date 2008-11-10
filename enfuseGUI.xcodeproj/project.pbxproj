@@ -11,6 +11,7 @@
 		1A758FBA0EB10818004D6FE0 /* NSImage+GTImageConversion.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A758FB90EB10818004D6FE0 /* NSImage+GTImageConversion.m */; };
 		7140F7490E8A551E00A56BB7 /* TaskWrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7460E8A551E00A56BB7 /* TaskWrapper.m */; };
 		7140F74A0E8A551E00A56BB7 /* enfuseController.m in Sources */ = {isa = PBXBuildFile; fileRef = 7140F7470E8A551E00A56BB7 /* enfuseController.m */; };
+		714197950EC8509300BF52E4 /* MLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 714197940EC8509300BF52E4 /* MLog.m */; };
 		71955B680E8A9D4F008CC333 /* Remove.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 71955B660E8A9D4F008CC333 /* Remove.tiff */; };
 		71955B690E8A9D4F008CC333 /* Add.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 71955B670E8A9D4F008CC333 /* Add.tiff */; };
 		71B7F84E0E8D005C00E0A1BF /* DBPrefsWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 71B7F84A0E8D005C00E0A1BF /* DBPrefsWindowController.m */; };
@@ -48,6 +49,8 @@
 		7140F7460E8A551E00A56BB7 /* TaskWrapper.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = TaskWrapper.m; sourceTree = "<group>"; };
 		7140F7470E8A551E00A56BB7 /* enfuseController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = enfuseController.m; sourceTree = "<group>"; };
 		7140F7480E8A551E00A56BB7 /* enfuseController.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = enfuseController.h; sourceTree = "<group>"; };
+		714197930EC8509300BF52E4 /* MLog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = MLog.h; sourceTree = "<group>"; };
+		714197940EC8509300BF52E4 /* MLog.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = MLog.m; sourceTree = "<group>"; };
 		71955B660E8A9D4F008CC333 /* Remove.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = Remove.tiff; sourceTree = "<group>"; };
 		71955B670E8A9D4F008CC333 /* Add.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = Add.tiff; sourceTree = "<group>"; };
 		71B7F84A0E8D005C00E0A1BF /* DBPrefsWindowController.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = DBPrefsWindowController.m; sourceTree = "<group>"; };
@@ -152,6 +155,8 @@
 		29B97315FDCFA39411CA2CEA /* Other Sources */ = {
 			isa = PBXGroup;
 			children = (
+				714197930EC8509300BF52E4 /* MLog.h */,
+				714197940EC8509300BF52E4 /* MLog.m */,
 				32CA4F630368D1EE00C91783 /* enfuseGUI_Prefix.pch */,
 				29B97316FDCFA39411CA2CEA /* main.m */,
 			);
@@ -261,6 +266,7 @@
 				71F501580EADF04100CB129D /* ExportOptionsController.m in Sources */,
 				1A758F920EB10643004D6FE0 /* TaskProgressInfo.m in Sources */,
 				1A758FBA0EB10818004D6FE0 /* NSImage+GTImageConversion.m in Sources */,
+				714197950EC8509300BF52E4 /* MLog.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

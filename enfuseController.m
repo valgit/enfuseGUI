@@ -1166,7 +1166,7 @@
 			NSDictionary *exif = [properties objectForKey:(NSString *)kCGImagePropertyExifDictionary];
 			if(exif) { /* kCGImagePropertyIPTCDictionary kCGImagePropertyExifAuxDictionary */
 				NSString *focalLengthStr, *fNumberStr, *exposureTimeStr,*exposureBiasStr;
-				//NSLog(@"the exif data is: %@", [exif description]);
+				//MLogString(1 ,@"the exif data is: %@", [exif description]);
 				NSNumber *focalLengthObj = [exif objectForKey:(NSString *)kCGImagePropertyExifFocalLength];
 				if (focalLengthObj) {
 					focalLengthStr = [NSString stringWithFormat:@"%@mm", [focalLengthObj stringValue]];
@@ -1179,13 +1179,14 @@
 				if (exposureTimeObj) {
 					exposureTimeStr = [NSString stringWithFormat:@"1/%.0f", (1/[exposureTimeObj floatValue])];
 				}
-				NSNumber *exposureBiasObj = (NSNumber *)[exif objectForKey:(NSString *)kCGImagePropertyExifExposureBiasValue];
+				NSNumber *exposureBiasObj = (NSNumber *)[exif objectForKey:@"ExposureBiasValue"];
 				if (exposureBiasObj) {
-					exposureBiasStr = [NSString stringWithFormat:@"Bias:%@", [exposureBiasObj stringValue]];
-				}
+					exposureBiasStr = [NSString stringWithFormat:@"Exposure Comp. : %+0.1f EV", [exposureBiasObj floatValue]];
+				} else 
+					exposureBiasStr = @"";
 				
-				text = [NSString stringWithFormat:@"%@\n%@ / %@ @ %@ bias : %@", [fileName lastPathComponent],
-					focalLengthStr,exposureTimeStr,fNumberStr,exposureBiasObj];
+				text = [NSString stringWithFormat:@"%@\n%@ / %@ @ %@\n%@", [fileName lastPathComponent],
+					focalLengthStr,exposureTimeStr,fNumberStr,exposureBiasStr];
 			} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
 			image = [self createThumbnail:source];
 			CFRelease(source);
