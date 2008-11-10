@@ -4,7 +4,7 @@ APP_NAME = enfuseGUI
 enfuseGUI_OBJC_FILES = enfuseController.m  main.m  TaskWrapper.m MyPrefsWindowController.m DBPrefsWindowController.m \
 NSImage-ProportionalScaling.m NSFileManager-Extensions.m  \
 alignStackTask.m enfuseTask.m ExportOptionsController.m \
-TaskProgressInfo.m CollapsibleBox.m
+TaskProgressInfo.m MLog.m
 
 #NSBezierPath+Additions.m
 #enfuseGUI_OBJC_LIBS = -lexiv2

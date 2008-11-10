@@ -2,6 +2,7 @@
  * interface to taskwrapper for align_stack_process
  */
 #import <Cocoa/Cocoa.h>
+#import "MLog.h"
 #import "alignStackTask.h"
 
 @implementation alignStackTask
@@ -24,8 +25,8 @@
 	
 	[args addObject:tempDirectoryPath];
 	
-	NSLog(@"%s will run with : << %@ >>",
-		__PRETTY_FUNCTION__, args);
+	MLogString(1 ,@"will run with : << %@ >>",
+		args);
     filename = nil;
   }
   return self;
@@ -33,7 +34,7 @@
 
 -(void)dealloc;
 {
-  NSLog(@"%s",__PRETTY_FUNCTION__);
+  MLogString(1 ,@"");
   //[lock release];
   [args release];
   [align_path release];
@@ -101,8 +102,8 @@
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	
-	NSLog(@"%s will run with : << %@ >>",
-		__PRETTY_FUNCTION__, args);
+	MLogString(1 ,@"will run with : << %@ >>",
+		 args);
 	if (findRunning) {
 		   NSLog(@"already running");
 		   return;
@@ -190,7 +191,7 @@
 - (void)processStarted;
 {
 	findRunning=YES;
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 }
 
 #pragma mark -
@@ -200,7 +201,7 @@
 	
 	if (_delegate && [_delegate respondsToSelector:@selector(alignFinish:)]) 
         [_delegate alignFinish:[status intValue]];
-	NSLog(@"%s status %@",__PRETTY_FUNCTION__,status);
+	MLogString(1 ,@"status %@",status);
 }
 
 - (void)processFinished:(int)status;
@@ -211,7 +212,7 @@
 	[self performSelectorOnMainThread:
       @selector(finishedAligning:) withObject:[NSNumber numberWithInt:status]
       waitUntilDone:NO];
-	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
+	MLogString(1 ,@"status %d",status);
 }
 
 @end

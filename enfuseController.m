@@ -6,6 +6,7 @@
 #else
 #import "NSImage-ProportionalScaling.h"
 #endif
+#import "MLog.h"
 #import "enfuseController.h"
 #import "NSFileManager-Extensions.h"
 #import "TaskProgressInfo.h"
@@ -142,7 +143,7 @@
     if ([format isEqualToString:@""])
 		format = [templatier pathExtension];
 	
-    NSLog(@"format is : %@",format);
+    MLogString(1 ,@"format is %@",format);
 	
     tempName =[NSString stringWithFormat:@"%@%@.%@",
 		[templatier stringByDeletingPathExtension],append,
@@ -162,7 +163,7 @@
 -(void)openFile:(NSString *)file
 {
 	NSWorkspace *wm = [NSWorkspace sharedWorkspace];
-	NSLog(@"%s tag: %d file : %@",__PRETTY_FUNCTION__,[[mDoAfter selectedCell] tag],file);
+	MLogString(1 ,@"tag: %d file : %@",[[mDoAfter selectedCell] tag],file);
 	switch ([[mDoAfter selectedCell] tag]) {
 		case 0 :
 			[wm openFile:file withApplication:@"Photoshop" andDeactivate:YES];
@@ -227,7 +228,7 @@
 } 
 
 - (BOOL)fileManager:(NSFileManager *)manager shouldProceedAfterError:(NSDictionary *)errorInfo {
-	NSLog(@"error: %@", errorInfo);
+	MLogString(1 ,@"error: %@", errorInfo);
 	int result;
         result = NSRunAlertPanel([[NSProcessInfo processInfo] processName],
                 @"file operation error",@"Continue", @"Cancel", NULL,
@@ -244,7 +245,7 @@
 - (void) applicationWillTerminate: (NSNotification *)note 
 { 
 	NSFileManager *defaultManager = [NSFileManager defaultManager];
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	//NSData* data = [self dataOfType:@"xml"];
 	//[data writeToFile:@"/tmp/test.xml" atomically:YES ];
 		NSDictionary* obj=nil;
@@ -296,7 +297,7 @@
 	NSString *text;
 	NSNumber *enable = [NSNumber numberWithBool: YES];
 	
-	NSLog(@"%s for: %d",__PRETTY_FUNCTION__,index);
+	MLogString(1 ,@"for: %d",index);
 	// TODO : better check for null ...
 	image = nil;
 	if ( nil == image) {
@@ -313,19 +314,19 @@
 // 
 -(void)insertObject:(id)obj inImagesAtIndex:(unsigned)index;
 {
-	NSLog(@"%s obj is : %@",__PRETTY_FUNCTION__,obj);
+	MLogString(1 ,@"obj is : %@",obj);
 	[images insertObject: obj  atIndex: index];
 }
 
 -(void)removeObjectFromImagesAtIndex:(unsigned)index;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	[images removeObjectAtIndex: index];
 }
 
 -(void)replaceObjectInImagesAtIndex:(unsigned)index withObject:(id)obj;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	[images replaceObjectAtIndex: index withObject: obj];
 }
 
@@ -344,13 +345,13 @@
 
 - (BOOL)tableView:(NSTableView *)tv writeRows:(NSArray*)rows toPasteboard:(NSPasteboard*)pboard;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	return YES;
 }
 
 - (NSDragOperation)tableView:(NSTableView*)tv validateDrop:(id <NSDraggingInfo>)info proposedRow:(int)row proposedDropOperation:(NSTableViewDropOperation)operation
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	// [tv setDropRow: -1 dropOperation:NSTableViewDropOn];
     //return NSDragOperationMove;
 	
@@ -370,7 +371,7 @@
 
 - (BOOL)tableView:(NSTableView *)aTableView acceptDrop:(id <NSDraggingInfo>)info row:(int)row dropOperation:(NSTableViewDropOperation)operation
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	NSPasteboard *pasteboard = [info draggingPasteboard];
 	if ( [[pasteboard types] containsObject:NSFilenamesPboardType] ) {
 		//NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
@@ -400,7 +401,7 @@
 
 - (IBAction)cancel:(id)sender
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	[ NSApp stopModal ];
 	findRunning = NO;
 
@@ -427,10 +428,9 @@
 
 - (IBAction)enfuse:(id)sender
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
-	
+	MLogString(1 ,@"");	
 	   if (findRunning) {
-		   NSLog(@"already running, canceling");
+		   MLogString(1 ,@"already running, canceling");
 		   // This stops the task and calls our callback (-processFinished)
 		   //[enfuseTask stopProcess];
 		   // Release the memory for this wrapper object
@@ -441,13 +441,13 @@
 	   } else {					   
 		findRunning = YES;
 			if (aligntask != nil) {
-				NSLog(@"%s need to cleanup autoalign ?",__PRETTY_FUNCTION__);
+				MLogString(1 ,@"need to cleanup autoalign ?");
 				[aligntask release];
 				aligntask = nil;
 			}
 				
 		   if ([mAutoalign state] == NSOnState) {
-				NSLog(@"%s need to autoalign",__PRETTY_FUNCTION__);
+				MLogString(1 ,@"need to autoalign");
 				aligntask = [[alignStackTask alloc] initWithPath:[self temppath]];
 				[aligntask setGridSize:[mGridSize stringValue]];
 				[aligntask setControlPoints:[mControlPoints stringValue]];
@@ -489,7 +489,7 @@
 				[mEnfuseButton setTitle:@"Cancel"];
 				return; // testing !
 		   } else {
-				NSLog(@"%s need to enfuse",__PRETTY_FUNCTION__);
+				MLogString(1 ,@"need to enfuse");
 				[self doEnfuse];
 		   }
 			
@@ -498,7 +498,7 @@
 
 - (void)doEnfuse
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	NSDictionary* file=nil;
 	
 	//
@@ -526,7 +526,7 @@
 																				   appending:[mAppendTo stringValue] ]];
 			break;
 		default:
-			NSLog(@"bad selected tag is %d",[[mOutputType selectedCell] tag]);
+			MLogString(1 ,@"bad selected tag is %d",[[mOutputType selectedCell] tag]);
 	}
 	
 	[self setOutputfile:outputfile];	
@@ -534,7 +534,7 @@
 	// 
 	// create the enfuse task
 	if (enfusetask != nil) {
-			NSLog(@"%s need to enfuse task",__PRETTY_FUNCTION__);
+			MLogString(1 ,@"need to enfuse task");
 				[enfusetask release];
 				enfusetask = nil;
 	}
@@ -546,7 +546,7 @@
 	
 	// TODO : check if align_image was run ...
 	if ([mAutoalign state] == NSOnState) {
-		NSLog(@"%s autoalign was run, get align data",__PRETTY_FUNCTION__);
+		MLogString(1 ,@"autoalign was run, get align data");
 		// put filenames and full pathnames into the file array
 		NSEnumerator *enumerator = [[[NSFileManager defaultManager] directoryContentsAtPath: [self temppath] ] objectEnumerator];
 		while (nil != (filename = [enumerator nextObject])) {
@@ -636,12 +636,12 @@
 																				   appending:[mAppendTo stringValue] ]];
 				   break;
 			   default:
-				   NSLog(@"bad selected tag is %d",[[mOutputType selectedCell] tag]);
+				   MLogString(1 ,@"bad selected tag is %d",[[mOutputType selectedCell] tag]);
 		   }
 		   
 		   [self setOutputfile:outputfile];
 		   [self setTempfile:[self tempfilename:[[mOutFormat titleOfSelectedItem] lowercaseString]]];
-		   NSLog(@"files are : (%@) %@,%@",outputfile,[self outputfile],[self tempfile]);
+		   MLogString(1 ,@"files are : (%@) %@,%@",outputfile,[self outputfile],[self tempfile]);
 
 #ifndef GNUSTEP
 		   NSString *path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] bundlePath],
@@ -719,7 +719,7 @@
 
 - (IBAction)reset:(id)sender
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	
 	[mContrastSlider setFloatValue:0.0]; // (0 <= WEIGHT <= 1).  Default: 0
 	[self takeContrast:mContrastSlider];
@@ -739,7 +739,7 @@
 
 - (IBAction) about: (IBOutlet)sender;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 #if 0
 // Method to load the .nib file for the info panel.
     if (!infoPanel) {
@@ -786,7 +786,7 @@
 		NSArray* files = [oPanel filenames];
 		
 		NSString* fileName = [files objectAtIndex:0];
-		NSLog(fileName);
+		MLogString(1 ,@"%@",fileName);
 		[mOuputFile setStringValue:fileName];
 		
 	}
@@ -804,7 +804,7 @@
 
 - (IBAction) quit: (IBOutlet)sender;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 }
 
 - (IBAction) takeContrast: (IBOutlet)sender;
@@ -847,7 +847,7 @@
              returnCode:(int)returnCode
             contextInfo:(void  *)contextInfo
 {
-  NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 
   //Did they choose open?
   if(returnCode == NSOKButton) {
@@ -859,7 +859,7 @@
 
 - (IBAction) openPresets: (IBOutlet)sender;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	NSOpenPanel *panel = [NSOpenPanel openPanel];
 
 	  [panel setCanChooseDirectories:NO];
@@ -883,7 +883,7 @@
              returnCode:(int)returnCode
             contextInfo:(void  *)contextInfo
 {
-  NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 
   //Did they choose open?
   if(returnCode == NSOKButton) {
@@ -895,7 +895,7 @@
 
 - (IBAction) savePresets: (IBOutlet)sender;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	NSSavePanel *panel = [NSSavePanel savePanel];
 
 	  //[panel setCanCreateDirectories:YES];
@@ -930,7 +930,7 @@
 	[myBadge badgeApplicationDockIconWithProgress:((value)/(2+4*[images count])) insetX:2 y:3];
 #endif
     } /* else {
-	NSLog(@"%d output is : [%@]",value, output);
+	MLogString(1 ,@"%d output is : [%@]",value, output);
     } */
 
     //[[resultsTextField textStorage] appendAttributedString: [[[NSAttributedString alloc]
@@ -1017,7 +1017,7 @@
 // delegate for align_task thread
 -(void)alignFinish:(int)status;
 {
-	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
+	MLogString(1 ,@"status %d",status);
         [mProgressIndicator setDoubleValue:0];
 	[mProgressIndicator stopAnimation:self];
 	[mProgressText setStringValue:@""];
@@ -1037,7 +1037,7 @@
 // delegate for enfuse task thread 
 -(void)enfuseFinish:(int)status;
 {
-	NSLog(@"%s status %d",__PRETTY_FUNCTION__,status);
+	MLogString(1 ,@"status %d",status);
 	[mProgressIndicator stopAnimation:self];
         [mProgressIndicator setDoubleValue:0];
 	[mProgressText setStringValue:@""];
@@ -1085,14 +1085,14 @@
 // return the number of row int the table
 - (int)numberOfRowsInTableView: (NSTableView *)aTable
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	//return [images count];
 	return 0;
 }
 
 - (id)tableView:(NSTableView *)aTableView objectValueForTableColumn:(NSTableColumn *)aTableColumn row:(int)rowIndex
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	// TODO return [[images objectAtIndex:rowIndex] objectForKey:[aTableColumn identifier]];
 	return nil;
 }
@@ -1140,7 +1140,7 @@
 		
 		for(i=0;i<fileArrayCount;i++) {
 		NSString* fileName = [files objectAtIndex:i];
-		NSLog(fileName);
+		MLogString(1 ,@"%@",fileName);
 		
 		NSImage* image;
 		NSString *text;
@@ -1293,7 +1293,7 @@
 
 - (IBAction)preferencesSaving:(id)sender;
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 #if 0
 	[options setAddKeyword:[exportOptionsSheetController AddKeyword]];
 	[options setImportInAperture:[exportOptionsSheetController ImportInAperture]];
@@ -1320,7 +1320,7 @@
 
 - (IBAction)openPreferences:(id)sender
 {
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 #if 1
 	[[MyPrefsWindowController sharedPrefsWindowController] showWindow:nil];
 	(void)sender;
@@ -1428,7 +1428,7 @@ http://caffeinatedcocoa.com/blog/?p=7
 -(void)copyExifFrom:(NSString*)sourcePath to:(NSString*)outputfile with:(NSString*)tempfile;
 {
 	NSMutableDictionary* newExif;
-	NSLog(@"%s",__PRETTY_FUNCTION__);
+	MLogString(1 ,@"");
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 #ifndef GNUSTEP
 	
@@ -1459,15 +1459,15 @@ http://caffeinatedcocoa.com/blog/?p=7
 			//newExif = [NSMutableDictionary dictionaryWithDictionary:exif];
 
 			if ([mCopyShutter state]==NSOnState) {
-				NSLog(@"%s removing shutter speed",__PRETTY_FUNCTION__);
+				MLogString(1 ,@"removing shutter speed");
 				[newExif removeObjectForKey:(NSString *)kCGImagePropertyExifExposureTime];
 			}
 			if ([mCopyAperture state]==NSOnState) {
-				NSLog(@"%s removing aperture",__PRETTY_FUNCTION__);
+				MLogString(1 ,@"removing aperture");
 				[newExif removeObjectForKey:(NSString *)kCGImagePropertyExifFNumber];
 			}
 			if ([mCopyFocal state]==NSOnState) {
-				NSLog(@"%s removing focal length",__PRETTY_FUNCTION__);
+				MLogString(1 ,@"removing focal length");
 				[newExif removeObjectForKey:(NSString *)kCGImagePropertyExifFocalLength];
 			}
 		} /* kCGImagePropertyExifFocalLength kCGImagePropertyExifExposureTime kCGImagePropertyExifExposureTime */
