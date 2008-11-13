@@ -72,6 +72,7 @@
 
   @private
     BOOL findRunning;
+    BOOL findRunningPreview;
     //TaskWrapper *enfuseTask;
 
     NSString* _outputfile;

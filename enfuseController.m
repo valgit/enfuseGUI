@@ -11,6 +11,8 @@
 #import "NSFileManager-Extensions.h"
 #import "TaskProgressInfo.h"
 
+#import "TaskWrapper.h"
+
 #include <math.h>
 
 // Categories : private methods
@@ -27,6 +29,8 @@
 -(NSString *)initTempDirectory;
 
 - (void) checkBeta;
+
+-(void)buildPreview;
 
 @end
 
@@ -754,7 +758,7 @@
 #endif
 }
 
-- (IBAction) chooseOutputDirectory: (IBOutlet)sender;
+- (IBAction) chooseOutputDirectory: (id)sender;
 {
 	// Create the File Open Panel class.
 	NSOpenPanel* oPanel = [NSOpenPanel openPanel];
@@ -793,7 +797,7 @@
 	
 }
 
-- (IBAction) takeSaturation: (IBOutlet)sender;
+- (IBAction) takeSaturation: (id)sender;
 {
 	//NSLog(@"%s",__PRETTY_FUNCTION__);
 	float theValue = [sender floatValue];
@@ -802,12 +806,12 @@
 	[mSaturationSlider setFloatValue:theValue];
 }
 
-- (IBAction) quit: (IBOutlet)sender;
+- (IBAction) quit: (id)sender;
 {
 	MLogString(1 ,@"");
 }
 
-- (IBAction) takeContrast: (IBOutlet)sender;
+- (IBAction) takeContrast: (id)sender;
 {
 	//NSLog(@"%s",__PRETTY_FUNCTION__);
 	float theValue = [sender floatValue];
@@ -816,7 +820,36 @@
 	[mContrastSlider setFloatValue:theValue];
 }
 
-- (IBAction) takeExposure: (IBOutlet)sender;
+#if 1
+//  test for detecting end of sliding ...
+//
+
+- (IBAction)takeExposure:(id)sender {
+	MLogString(6 ,@"");
+
+    SEL trackingEndedSelector = @selector(ExposuresliderEnded:);
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+	selector:trackingEndedSelector object:sender];
+    [self performSelector:trackingEndedSelector withObject:sender afterDelay:0.0];
+
+    // do whatever you want to do during tracking here 
+	float theValue = [sender floatValue];
+	[mExposureTextField setFloatValue:theValue];
+	[mExposureSlider setFloatValue:theValue];
+}
+
+- (void)ExposuresliderEnded:(id)sender 
+{
+	MLogString(6 ,@"");
+    // do whatever you want to do when tracking ends here 
+    // call preview ?
+}
+
+#else
+// normal way ...
+//
+
+- (IBAction) takeExposure: (id)sender;
 {
 	//NSLog(@"%s",__PRETTY_FUNCTION__);
 	float theValue = [sender floatValue];
@@ -824,8 +857,9 @@
 	//[mStrengthStepper setFloatValue:theValue];
 	[mExposureSlider setFloatValue:theValue];
 }
+#endif
 
-- (IBAction) takeSigma: (IBOutlet)sender;
+- (IBAction) takeSigma: (id)sender;
 {
 	//NSLog(@"%s",__PRETTY_FUNCTION__);
 	float theValue = [sender floatValue];
@@ -834,7 +868,7 @@
 	[mSigmaSlider setFloatValue:theValue];
 }
 
-- (IBAction) takeMu: (IBOutlet)sender;
+- (IBAction) takeMu: (id)sender;
 {
 	//NSLog(@"%s",__PRETTY_FUNCTION__);
 	float theValue = [sender floatValue];
@@ -923,12 +957,10 @@
     // backing store, in the form of an attributed string
     if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
 	[output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
-	[mProgressIndicator incrementBy:1.0];
-	value+=1;
-	//NSLog(@"%d output is : [%@]",value, output);
+	    MLogString(4 ,@"%d output is : [%@]",value, output);
 	#ifndef GNUSTEP
 	[myBadge badgeApplicationDockIconWithProgress:((value)/(2+4*[images count])) insetX:2 y:3];
-#endif
+	#endif
     } /* else {
 	MLogString(1 ,@"%d output is : [%@]",value, output);
     } */
@@ -947,14 +979,9 @@
 // to the ProcessController protocol.
 - (void)processStarted
 {
-    findRunning=YES;
-    // clear the results
-    //[resultsTextField setString:@""];
-    // change the "Sleuth" button to say "Stop"
-    //[mRestoreButton setTitle:@"Stop"];
-    //[mEnfuseButton setEnabled:NO];
-	[mProgressIndicator startAnimation:self];
-	value = 0;
+    MLogString(6 ,@"");
+
+    findRunningPreview=YES;
 }
 
 // A callback that gets called when a TaskWrapper is completed, allowing us to do any cleanup
@@ -962,28 +989,9 @@
 // to the ProcessController protocol.
 - (void)processFinished:(int)status
 {
-    [mProgressIndicator stopAnimation:self];
-    [mProgressIndicator setDoubleValue:0];
-	
-    findRunning=NO;
-    // change the button's title back for the next search
-    //[mEnfuseButton setTitle:@"Enfuse"];
-    [mEnfuseButton setEnabled:YES];
-	
-    if([mCopyMeta state]==NSOnState)  {
-		[self copyExifFrom:[[images objectAtIndex:0] valueForKey:@"file"] to:[self outputfile] with:[self tempfile]];
-    } else {
-		NSFileManager *fm = [NSFileManager defaultManager];
-		if ([fm fileExistsAtPath:([self tempfile])]){
-			BOOL result = [fm movePath:[self tempfile] toPath:[self outputfile] handler:self];
-		} else {
-			NSString *alert = [[self tempfile] stringByAppendingString: @" do not exist!\nCan't rename"];
-			NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""),
-				 alert, NSLocalizedString(@"OK",nil), NULL, NULL);
-		}
-    }
-	
-    [self openFile:[self outputfile]];
+    MLogString(6 ,@"");
+
+    findRunningPreview=NO;
 }
 
 // If the user closes the search window, let's just quit
@@ -1224,6 +1232,7 @@
 		[images addObject:newImage];
 		[mTableImage reloadData];
         	//[mTableImage scrollRowToVisible:[mTableImage numberOfRows]-1];
+		[self buildPreview];
 
 #else
 		[mImageArrayCtrl addObject:newImage];
@@ -1654,6 +1663,47 @@ http://caffeinatedcocoa.com/blog/?p=7
         }
         [[NSApplication sharedApplication] terminate:self];
     }
+}
+
+-(void)buildPreview;
+{
+	MLogString(6 ,@"");
+	NSMutableArray *args = [NSMutableArray array];
+
+	NSString* enfuse_path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] resourcePath],
+                        @"/enfuse"];
+        [args addObject:enfuse_path];
+
+	[args addObject:@"-o"];
+	[args addObject:[self previewfilename:@"enfuse.tif"]];
+	MLogString(4 ,@"preview file is %@",[self previewfilename:@"enfuse.tif"]);
+
+	// gather thumbnail ...
+	NSDictionary* obj=nil;
+        NSEnumerator *enumerator = [images objectEnumerator];
+
+        while ( nil != (obj = [enumerator nextObject]) ) {
+	   if ([[obj valueForKey:@"enable"] boolValue]){
+		   [args addObject:[obj valueForKey:@"thumbfile"]];
+	   }
+        }
+
+	// gather parameters ...
+	[args addObject:[NSString stringWithFormat:@"--wExposure=%@",[mExposureSlider stringValue]]];
+        [args addObject:[NSString stringWithFormat:@"--wSaturation=%@",[mSaturationSlider stringValue]]];
+        [args addObject:[NSString stringWithFormat:@"--wContrast=%@",[mContrastSlider stringValue]]];
+
+        [args addObject:[NSString stringWithFormat:@"--wMu=%@",[mMuSlider stringValue]]];
+        [args addObject:[NSString stringWithFormat:@"--wSigma=%@",[mSigmaSlider stringValue]]];
+
+	TaskWrapper* previewTask=[[TaskWrapper alloc] initWithController:self arguments:args];
+
+	int status = [previewTask startProcess];
+        if (status != 0) {
+                NSRunAlertPanel (NSLocalizedString(@"Fatal Error",@""), @"running error", @"OK", NULL, NULL);
+        } else  {
+	       [previewTask waitUntilExit];
+	}
 }
 
 @end
