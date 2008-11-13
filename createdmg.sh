@@ -4,6 +4,7 @@ echo "create image"
 /usr/bin/hdiutil attach -nobrowse -mountpoint enfuseGUI enfuseGUI.sparseimage 
 echo "copying data"
 cp -R build/Release/enfuseGUI.app enfuseGUI
+ln -s /Applications /Volumes/enfuseGUI/.
 echo "detaching"
 /usr/bin/hdiutil detach enfuseGUI
 echo "compressing DMG"

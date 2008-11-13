@@ -104,6 +104,11 @@
 #endif
 	//[self setTempPath:NSTemporaryDirectory()]; // TODO better
 	[self setTempPath:[self initTempDirectory]];
+	
+	NSString* imageName = [[NSBundle mainBundle]
+                    pathForResource:@"image_broken" ofType:@"png"];
+	NSImage* _image = [[[NSImage alloc] initWithContentsOfFile:imageName] autorelease];
+	[mPreviewImage setImage:_image];
 }
 
 - (id)init
@@ -175,8 +180,11 @@
 		case 1 :
 			[wm openFile:file];
 			break;
-		default :
-			// do nothing
+		default : {
+			// do nothing ? use for preview !
+			NSImage* _image = [[[NSImage alloc] initWithContentsOfFile:file] autorelease];
+			[mPreviewImage setImage:_image];
+			}
 			break;
     }
 }
@@ -797,35 +805,63 @@
 	
 }
 
-- (IBAction) takeSaturation: (id)sender;
-{
-	//NSLog(@"%s",__PRETTY_FUNCTION__);
-	float theValue = [sender floatValue];
-	[mSaturationTextField setFloatValue:theValue];
-	//[mStrengthStepper setFloatValue:theValue];
-	[mSaturationSlider setFloatValue:theValue];
-}
 
 - (IBAction) quit: (id)sender;
 {
 	MLogString(1 ,@"");
 }
 
-- (IBAction) takeContrast: (id)sender;
-{
-	//NSLog(@"%s",__PRETTY_FUNCTION__);
-	float theValue = [sender floatValue];
-	[mContrastTextField setFloatValue:theValue];
-	//[mStrengthStepper setFloatValue:theValue];
-	[mContrastSlider setFloatValue:theValue];
-}
 
 #if 1
 //  test for detecting end of sliding ...
 //
+- (IBAction)takeSaturation:(id)sender {
+	//MLogString(6 ,@"");
+	
+    SEL trackingEndedSelector = @selector(SaturationsliderEnded:);
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+											 selector:trackingEndedSelector object:sender];
+    [self performSelector:trackingEndedSelector withObject:sender afterDelay:0.0];
+	
+    // do whatever you want to do during tracking here 
+	float theValue = [sender floatValue];
+	[mSaturationTextField setFloatValue:theValue];
+	[mSaturationSlider setFloatValue:theValue];
+	
+}
+
+- (void)SaturationsliderEnded:(id)sender 
+{
+	MLogString(6 ,@"");
+    // do whatever you want to do when tracking ends here 
+    // call preview ?
+	[self buildPreview];
+}
+
+- (IBAction)takeContrast:(id)sender {
+	//MLogString(6 ,@"");
+	
+    SEL trackingEndedSelector = @selector(ContrastsliderEnded:);
+    [NSObject cancelPreviousPerformRequestsWithTarget:self
+											 selector:trackingEndedSelector object:sender];
+    [self performSelector:trackingEndedSelector withObject:sender afterDelay:0.0];
+	
+    // do whatever you want to do during tracking here 
+	float theValue = [sender floatValue];
+	[mContrastTextField setFloatValue:theValue];
+	[mContrastSlider setFloatValue:theValue];	
+}
+
+- (void)ContrastsliderEnded:(id)sender 
+{
+	MLogString(6 ,@"");
+    // do whatever you want to do when tracking ends here 
+    // call preview ?
+	[self buildPreview];
+}
 
 - (IBAction)takeExposure:(id)sender {
-	MLogString(6 ,@"");
+	//MLogString(6 ,@"");
 
     SEL trackingEndedSelector = @selector(ExposuresliderEnded:);
     [NSObject cancelPreviousPerformRequestsWithTarget:self
@@ -843,11 +879,29 @@
 	MLogString(6 ,@"");
     // do whatever you want to do when tracking ends here 
     // call preview ?
+	[self buildPreview];
 }
 
 #else
 // normal way ...
 //
+- (IBAction) takeSaturation: (id)sender;
+{
+	//NSLog(@"%s",__PRETTY_FUNCTION__);
+	float theValue = [sender floatValue];
+	[mSaturationTextField setFloatValue:theValue];
+	//[mStrengthStepper setFloatValue:theValue];
+	[mSaturationSlider setFloatValue:theValue];
+}
+
+- (IBAction) takeContrast: (id)sender;
+{
+	//NSLog(@"%s",__PRETTY_FUNCTION__);
+	float theValue = [sender floatValue];
+	[mContrastTextField setFloatValue:theValue];
+	//[mStrengthStepper setFloatValue:theValue];
+	[mContrastSlider setFloatValue:theValue];
+}
 
 - (IBAction) takeExposure: (id)sender;
 {
@@ -959,7 +1013,7 @@
 	[output hasPrefix: @"Loading next image"] || [output hasPrefix: @"Using"] ) {
 	    MLogString(4 ,@"%d output is : [%@]",value, output);
 	#ifndef GNUSTEP
-	[myBadge badgeApplicationDockIconWithProgress:((value)/(2+4*[images count])) insetX:2 y:3];
+		//NSImage* progress = [myBadge badgeOverlayImageWithProgress:((value)/(2+4*[images count])) insetX:2 y:3];
 	#endif
     } /* else {
 	MLogString(1 ,@"%d output is : [%@]",value, output);
@@ -992,6 +1046,8 @@
     MLogString(6 ,@"");
 
     findRunningPreview=NO;
+	NSImage* _image = [[[NSImage alloc] initWithContentsOfFile:[self previewfilename:@"enfuse.tif"]] autorelease];
+	[mPreviewImage setImage:_image];
 }
 
 // If the user closes the search window, let's just quit
@@ -1232,11 +1288,12 @@
 		[images addObject:newImage];
 		[mTableImage reloadData];
         	//[mTableImage scrollRowToVisible:[mTableImage numberOfRows]-1];
-		[self buildPreview];
+		
 
 #else
 		[mImageArrayCtrl addObject:newImage];
 #endif
+		[self buildPreview];
 		//[newImage release]; // memory bug ?
 		}
 		
@@ -1668,6 +1725,17 @@ http://caffeinatedcocoa.com/blog/?p=7
 -(void)buildPreview;
 {
 	MLogString(6 ,@"");
+	
+	if (findRunningPreview != NO) {
+		MLogString(5 ,@"preview already running");
+		return ;
+	}	
+	
+	if ([self countOfImages] == 0) {
+		MLogString(5 ,@"preview : no images");
+		return ;
+	}
+	
 	NSMutableArray *args = [NSMutableArray array];
 
 	NSString* enfuse_path = [NSString stringWithFormat:@"%@%@",[[NSBundle mainBundle] resourcePath],

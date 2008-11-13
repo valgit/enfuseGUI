@@ -19,6 +19,7 @@
 		71B7F8660E8D01F400E0A1BF /* Preferences.nib in Resources */ = {isa = PBXBuildFile; fileRef = 71B7F8640E8D01F400E0A1BF /* Preferences.nib */; };
 		71B7F8730E8D024F00E0A1BF /* update.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 71B7F8720E8D024F00E0A1BF /* update.tiff */; };
 		71B7F8750E8D026C00E0A1BF /* general.png in Resources */ = {isa = PBXBuildFile; fileRef = 71B7F8740E8D026C00E0A1BF /* general.png */; };
+		71F0CA0C0ECC4CE300E7587C /* image_broken.png in Resources */ = {isa = PBXBuildFile; fileRef = 71F0CA0B0ECC4CE300E7587C /* image_broken.png */; };
 		71F3D5E50EADBF6F007EFED9 /* alignStackTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F3D5E00EADBF6F007EFED9 /* alignStackTask.m */; };
 		71F3D5E60EADBF6F007EFED9 /* CTProgressBadge.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F3D5E20EADBF6F007EFED9 /* CTProgressBadge.m */; };
 		71F3D5E70EADBF6F007EFED9 /* enfuseTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 71F3D5E40EADBF6F007EFED9 /* enfuseTask.m */; };
@@ -60,6 +61,7 @@
 		71B7F8650E8D01F400E0A1BF /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = English.lproj/Preferences.nib; sourceTree = "<group>"; };
 		71B7F8720E8D024F00E0A1BF /* update.tiff */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; name = update.tiff; path = ../ImagePrinter/update.tiff; sourceTree = SOURCE_ROOT; };
 		71B7F8740E8D026C00E0A1BF /* general.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = general.png; sourceTree = "<group>"; };
+		71F0CA0B0ECC4CE300E7587C /* image_broken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = image_broken.png; sourceTree = "<group>"; };
 		71F3D5DF0EADBF6F007EFED9 /* alignStackTask.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = alignStackTask.h; sourceTree = "<group>"; };
 		71F3D5E00EADBF6F007EFED9 /* alignStackTask.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = alignStackTask.m; sourceTree = "<group>"; };
 		71F3D5E10EADBF6F007EFED9 /* CTProgressBadge.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = CTProgressBadge.h; sourceTree = "<group>"; };
@@ -188,6 +190,7 @@
 		71786E520E8A96B700AAC519 /* images */ = {
 			isa = PBXGroup;
 			children = (
+				71F0CA0B0ECC4CE300E7587C /* image_broken.png */,
 				71B7F8740E8D026C00E0A1BF /* general.png */,
 				71B7F8720E8D024F00E0A1BF /* update.tiff */,
 				71955B660E8A9D4F008CC333 /* Remove.tiff */,
@@ -245,6 +248,7 @@
 				71B7F8730E8D024F00E0A1BF /* update.tiff in Resources */,
 				71B7F8750E8D026C00E0A1BF /* general.png in Resources */,
 				71F5015D0EADF1FB00CB129D /* ExportOptions.nib in Resources */,
+				71F0CA0C0ECC4CE300E7587C /* image_broken.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

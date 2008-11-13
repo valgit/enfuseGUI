@@ -66,6 +66,8 @@
   IBOutlet NSPanel *mProgressPanel;
   IBOutlet NSProgressIndicator *mProgressIndicator;
   IBOutlet NSTextField *mProgressText;
+  IBOutlet NSImageView *mPreviewImage;
+  
   CTProgressBadge *myBadge;
 
   IBOutlet ExportOptionsController* exportOptionsSheetController;

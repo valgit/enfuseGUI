@@ -53,6 +53,7 @@
                 mOutQuality = NSTextField; 
                 mOutputQualitySlider = NSSlider; 
                 mOutputType = NSMatrix; 
+                mPreviewImage = NSImageView; 
                 mProgressIndicator = NSProgressIndicator; 
                 mProgressPanel = NSPanel; 
                 mProgressText = NSTextField; 
