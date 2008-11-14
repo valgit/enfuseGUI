@@ -200,6 +200,23 @@
 }
 
 // saving ?
+-(id)propertyList {
+   NSMutableDictionary *plist = [NSMutableDictionary dictionary];
+   [plist setObject:@"1.0"  forKey:@"version"];
+
+   [plist setObject:[NSNumber numberWithDouble:[mContrastSlider doubleValue]] forKey: @"contrast"];
+   [plist setObject:[NSNumber numberWithDouble:[mExposureSlider doubleValue]] forKey: @"exposure"];
+   [plist setObject:[NSNumber numberWithDouble:[mSaturationSlider doubleValue]] forKey: @"saturation"];
+
+   [plist setObject:[NSNumber numberWithDouble:[mMuSlider doubleValue]] forKey: @"mu"];
+   [plist setObject:[NSNumber numberWithDouble:[mSigmaSlider doubleValue]] forKey: @"sigma"];
+
+   [plist setObject:[NSNumber numberWithDouble:[mContrastWindowSizeTextField doubleValue]] forKey: @"windowsize"];
+   [plist setObject:[NSNumber numberWithDouble:[mMinCurvatureTextField doubleValue]] forKey: @"mincurvature"];
+
+   return plist;
+}
+
 - (NSData *) dataOfType: (NSString *) typeName
 {
 
@@ -939,9 +956,31 @@
 
   //Did they choose open?
   if(returnCode == NSOKButton) {
-	NSData* data = [NSData dataWithContentsOfFile:[panel filename]];
-	[self readFromData:data ofType:@"xml"];
-	[data release];
+	//NSData* data = [NSData dataWithContentsOfFile:[panel filename]];
+	//[self readFromData:data ofType:@"xml"];
+	//[data release];
+	NSData* plistData = [NSData dataWithContentsOfFile:[panel filename]];
+	NSPropertyListFormat format;
+	NSString *error;
+	id plistDict = [NSPropertyListSerialization propertyListFromData:plistData
+                                mutabilityOption:NSPropertyListImmutable
+                                format:&format
+                                errorDescription:&error];
+
+	if(!plistDict) {
+	    MLogString(1 ,@"%@",error);
+	    [error release];
+	} else {
+		// TODO : better init ...
+		//NSMutableDictionary* plistDict = [[NSMutableDictionary alloc] initWithContentsOfFile:[panel filename]];
+		[mContrastSlider setFloatValue:[[plistDict objectForKey:@"contrast"] floatValue]];
+		[mExposureSlider setFloatValue:[[plistDict objectForKey:@"exposure"] floatValue]];
+		[mSaturationSlider setFloatValue:[[plistDict objectForKey:@"saturation"] floatValue]];
+		[mMuSlider setFloatValue:[[plistDict objectForKey:@"mu"] floatValue]];
+		[mSigmaSlider setFloatValue:[[plistDict objectForKey:@"sigma"] floatValue]];
+	}
+	//[plistDict release];
+	//[plistData release];
   }
 }
 
@@ -955,7 +994,7 @@
 	  [panel setCanCreateDirectories:NO];
 	  [panel setAllowsMultipleSelection:NO];
 	  [panel setAlphaValue:0.95];
-	  [panel setTitle:@"Select preset"];
+	  [panel setTitle:@"Select a preset"];
 
 	  [panel beginSheetForDirectory: nil
 		 file:nil
@@ -976,8 +1015,21 @@
   //Did they choose open?
   if(returnCode == NSOKButton) {
 
-    NSData* data = [self dataOfType:@"xml"];
-    [data writeToFile:[panel filename] atomically:YES ];
+    //NSData* data = [self dataOfType:@"xml"];
+    //[data writeToFile:[panel filename] atomically:YES ];
+    // [plistDict writeToFile:[panel filename] atomically:YES ];
+    NSMutableDictionary* plistDict = [self propertyList];
+    NSString *error;
+    NSData* xmlData = [NSPropertyListSerialization dataFromPropertyList:plistDict
+                                       format:NSPropertyListXMLFormat_v1_0
+                                       errorDescription:&error];
+
+	if(xmlData) {
+	    [xmlData writeToFile:[panel filename] atomically:YES];
+	} else {
+	    MLogString(1 ,@"%@",error);
+	    [error release];
+	}
   }
 }
 
@@ -992,7 +1044,7 @@
 	  [panel setTitle:@"Save preset"];
 
 	  [panel beginSheetForDirectory: nil
-		 file:@"default.preset" // default filename
+		 file:@"default.plist" // default filename
 		 modalForWindow: window // [self window ]
 		 modalDelegate:self
 		 didEndSelector:
@@ -1007,6 +1059,7 @@
 // It will be called whenever there is output from the TaskWrapper.
 - (void)appendOutput:(NSString *)output
 {
+	    //MLogString(4 ,@"%d output is : [%@]",value, output);
     // add the string (a chunk of the results from locate) to the NSTextView's
     // backing store, in the form of an attributed string
     if ([output hasPrefix:@"Generating"] || [output hasPrefix:@"Collapsing"]  ||
